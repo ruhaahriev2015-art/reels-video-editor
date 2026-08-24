@@ -272,19 +272,19 @@ def edit_video():
                 if end <= start:
                     continue
 
-                drawtext_filters.append(
-                    "drawtext="
-                    f"fontfile={FONT_PATH}:"
-                    f"textfile={text_file}:"
-                    "fontcolor=white:"
-                    "fontsize=h*0.055:"
-                    "box=1:"
-                    "boxcolor=black@0.60:"
-                    "boxborderw=18:"
-                    "x=(w-text_w)/2:"
-                    "y=h*0.08:"
-                    f"enable='between(t,{start},{end})'"
-                )
+drawtext_filters.append(
+    "drawtext="
+    f"fontfile={FONT_PATH}:"
+    f"textfile={text_file}:"
+    "fontcolor=white:"
+    "fontsize=h*0.035:"
+    "box=1:"
+    "boxcolor=black@0.60:"
+    "boxborderw=12:"
+    "x=(w-text_w)/2:"
+    "y=h*0.08:"
+    f"enable='between(t,{start},{end})'"
+)
 
             if drawtext_filters:
 
