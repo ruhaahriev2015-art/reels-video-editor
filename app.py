@@ -135,7 +135,9 @@ def edit_video():
                 "-y",
                 "-i", input_path,
                 "-c:v", "libx264",
-                "-preset", "veryfast",
+                "-preset", "ultrafast",
+                "-threads", "1",
+                "-x264-params", "rc-lookahead=0:sync-lookahead=0",
                 "-c:a", "aac",
                 "-movflags", "+faststart",
                 cut_path
@@ -218,7 +220,9 @@ def edit_video():
                 "-map", "[outv]",
                 "-map", "[outa]",
                 "-c:v", "libx264",
-                "-preset", "veryfast",
+                "-preset", "ultrafast",
+                "-threads", "1",
+                "-x264-params", "rc-lookahead=0:sync-lookahead=0",
                 "-c:a", "aac",
                 "-movflags", "+faststart",
                 cut_path
@@ -291,7 +295,9 @@ def edit_video():
                     "-vf",
                     ",".join(drawtext_filters),
                     "-c:v", "libx264",
-                    "-preset", "veryfast",
+                    "-preset", "ultrafast",
+                    "-threads", "1",
+                    "-x264-params", "rc-lookahead=0:sync-lookahead=0",
                     "-c:a", "copy",
                     "-movflags", "+faststart",
                     output_path
