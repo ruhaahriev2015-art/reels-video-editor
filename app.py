@@ -195,8 +195,7 @@ def edit_video():
             # TEXT
             # -------------------------
 
-            elif action_type == "TEXT":
-
+           elif action_type in ("TEXT", "SUBTITLE"):
                 start = float(
                     action.get("start", 0)
                 )
