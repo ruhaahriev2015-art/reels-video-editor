@@ -58,16 +58,23 @@ def map_time_after_cuts(time_value, cuts):
     removed = 0.0
 
     for start, end in cuts:
+
         if time_value >= end:
             removed += end - start
 
         elif time_value > start:
-            return max(0.0, start - removed)
+            return max(
+                0.0,
+                start - removed
+            )
 
         else:
             break
 
-    return max(0.0, time_value - removed)
+    return max(
+        0.0,
+        time_value - removed
+    )
 
 
 def merge_cuts(cuts):
@@ -78,6 +85,7 @@ def merge_cuts(cuts):
     merged = [cuts[0]]
 
     for start, end in cuts[1:]:
+
         last_start, last_end = merged[-1]
 
         if start <= last_end:
@@ -86,7 +94,9 @@ def merge_cuts(cuts):
                 max(last_end, end)
             )
         else:
-            merged.append((start, end))
+            merged.append(
+                (start, end)
+            )
 
     return merged
 
@@ -107,18 +117,32 @@ def edit_video():
     )
 
     try:
-        actions = json.loads(actions_raw)
+        actions = json.loads(
+            actions_raw
+        )
 
-        if not isinstance(actions, list):
-            raise ValueError("actions must be list")
+        if not isinstance(
+            actions,
+            list
+        ):
+            raise ValueError(
+                "actions must be list"
+            )
 
     except Exception as e:
+
         return jsonify({
-            "error": "Invalid actions JSON",
-            "details": str(e)
+            "error":
+                "Invalid actions JSON",
+            "details":
+                str(e)
         }), 400
 
-    job_id = str(uuid.uuid4())
+
+    job_id = str(
+        uuid.uuid4()
+    )
+
 
     input_path = os.path.join(
         WORK_DIR,
@@ -140,47 +164,81 @@ def edit_video():
         f"{job_id}_output.mp4"
     )
 
-    text_files = []
 
-    video.save(input_path)
+    text_files = []
+    highlight_files = []
+
+
+    video.save(
+        input_path
+    )
+
 
     cuts = []
     text_actions = []
     zoom_actions = []
 
+
     try:
 
-        # ==============================
-        # ЧИТАЕМ КОМАНДЫ
-        # ==============================
+        # ==================================
+        # ЧИТАЕМ МОНТАЖНЫЕ КОМАНДЫ
+        # ==================================
 
         for action in actions:
 
             action_type = str(
-                action.get("action", "")
+                action.get(
+                    "action",
+                    ""
+                )
             ).upper().strip()
 
+
+            # --------------------------
             # CUT
+            # --------------------------
+
             if action_type == "CUT":
 
                 start = float(
-                    action.get("start", 0)
+                    action.get(
+                        "start",
+                        0
+                    )
                 )
 
                 end = float(
-                    action.get("end", 0)
+                    action.get(
+                        "end",
+                        0
+                    )
                 )
 
                 if end > start:
+
                     cuts.append(
-                        (start, end)
+                        (
+                            start,
+                            end
+                        )
                     )
 
+
+            # --------------------------
             # TEXT / SUBTITLE
-            elif action_type in ("TEXT", "SUBTITLE"):
+            # --------------------------
+
+            elif action_type in (
+                "TEXT",
+                "SUBTITLE"
+            ):
 
                 start = float(
-                    action.get("start", 0)
+                    action.get(
+                        "start",
+                        0
+                    )
                 )
 
                 end = float(
@@ -197,19 +255,38 @@ def edit_video():
                     )
                 ).strip()
 
-                if text and end > start:
+                highlight = str(
+                    action.get(
+                        "highlight",
+                        ""
+                    )
+                ).strip()
+
+
+                if (
+                    text and
+                    end > start
+                ):
 
                     text_actions.append({
                         "start": start,
                         "end": end,
-                        "text": text
+                        "text": text,
+                        "highlight": highlight
                     })
 
+
+            # --------------------------
             # ZOOM
+            # --------------------------
+
             elif action_type == "ZOOM":
 
                 start = float(
-                    action.get("start", 0)
+                    action.get(
+                        "start",
+                        0
+                    )
                 )
 
                 end = float(
@@ -226,46 +303,73 @@ def edit_video():
                     )
                 )
 
+
                 scale = max(
                     1.01,
-                    min(scale, 1.35)
+                    min(
+                        scale,
+                        1.35
+                    )
                 )
+
 
                 if end > start:
 
                     zoom_actions.append({
-                        "start": start,
-                        "end": end,
-                        "scale": scale
+                        "start":
+                            start,
+
+                        "end":
+                            end,
+
+                        "scale":
+                            scale
                     })
 
 
-        cuts = merge_cuts(cuts)
+        cuts = merge_cuts(
+            cuts
+        )
 
-        # ==============================
+
+        # ==================================
         # ЭТАП 1 — CUT
-        # ==============================
+        # ==================================
 
         if not cuts:
 
             command = [
                 "ffmpeg",
                 "-y",
-                "-i", input_path,
 
-                "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-threads", "1",
+                "-i",
+                input_path,
 
-                "-c:a", "aac",
-                "-b:a", "128k",
+                "-c:v",
+                "libx264",
 
-                "-movflags", "+faststart",
+                "-preset",
+                "ultrafast",
+
+                "-threads",
+                "1",
+
+                "-c:a",
+                "aac",
+
+                "-b:a",
+                "128k",
+
+                "-movflags",
+                "+faststart",
 
                 cut_path
             ]
 
-            run_ffmpeg(command)
+            run_ffmpeg(
+                command
+            )
+
 
         else:
 
@@ -273,20 +377,29 @@ def edit_video():
                 input_path
             )
 
+
             keep_segments = []
             current = 0.0
+
 
             for start, end in cuts:
 
                 start = max(
                     0.0,
-                    min(start, duration)
+                    min(
+                        start,
+                        duration
+                    )
                 )
 
                 end = max(
                     0.0,
-                    min(end, duration)
+                    min(
+                        end,
+                        duration
+                    )
                 )
+
 
                 if start > current:
 
@@ -297,10 +410,12 @@ def edit_video():
                         )
                     )
 
+
                 current = max(
                     current,
                     end
                 )
+
 
             if current < duration:
 
@@ -311,6 +426,7 @@ def edit_video():
                     )
                 )
 
+
             if not keep_segments:
 
                 return jsonify({
@@ -318,8 +434,10 @@ def edit_video():
                     "CUT actions remove the entire video"
                 }), 400
 
+
             filters = []
             concat_inputs = []
+
 
             for index, (
                 start,
@@ -347,50 +465,73 @@ def edit_video():
                     f"[a{index}]"
                 )
 
+
             filters.append(
-                "".join(concat_inputs)
+                "".join(
+                    concat_inputs
+                )
                 +
                 f"concat=n={len(keep_segments)}:"
                 f"v=1:a=1"
                 f"[outv][outa]"
             )
 
+
             command = [
                 "ffmpeg",
                 "-y",
 
-                "-i", input_path,
+                "-i",
+                input_path,
 
                 "-filter_complex",
-                ";".join(filters),
+                ";".join(
+                    filters
+                ),
 
-                "-map", "[outv]",
-                "-map", "[outa]",
+                "-map",
+                "[outv]",
 
-                "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-threads", "1",
+                "-map",
+                "[outa]",
 
-                "-c:a", "aac",
-                "-b:a", "128k",
+                "-c:v",
+                "libx264",
 
-                "-movflags", "+faststart",
+                "-preset",
+                "ultrafast",
+
+                "-threads",
+                "1",
+
+                "-c:a",
+                "aac",
+
+                "-b:a",
+                "128k",
+
+                "-movflags",
+                "+faststart",
 
                 cut_path
             ]
 
-            run_ffmpeg(command)
+
+            run_ffmpeg(
+                command
+            )
 
 
-        # ==============================
+        # ==================================
         # ЭТАП 2 — ZOOM
-        # ==============================
+        # ==================================
 
         mapped_zooms = []
 
         cut_duration = get_duration(
             cut_path
         )
+
 
         for item in zoom_actions:
 
@@ -404,22 +545,35 @@ def edit_video():
                 cuts
             )
 
+
             start = max(
                 0.0,
-                min(start, cut_duration)
+                min(
+                    start,
+                    cut_duration
+                )
             )
 
             end = max(
                 0.0,
-                min(end, cut_duration)
+                min(
+                    end,
+                    cut_duration
+                )
             )
+
 
             if end > start:
 
                 mapped_zooms.append({
-                    "start": start,
-                    "end": end,
-                    "scale": item["scale"]
+                    "start":
+                        start,
+
+                    "end":
+                        end,
+
+                    "scale":
+                        item["scale"]
                 })
 
 
@@ -427,60 +581,86 @@ def edit_video():
 
             zoom_filters = []
 
+
             for item in mapped_zooms:
 
                 start = item["start"]
                 end = item["end"]
                 scale = item["scale"]
 
+
                 zoom_filters.append(
+
                     "scale="
+
                     f"w='if(between(t,{start},{end}),"
                     f"trunc(iw*{scale}/2)*2,iw)':"
+
                     f"h='if(between(t,{start},{end}),"
                     f"trunc(ih*{scale}/2)*2,ih)':"
+
                     "eval=frame"
                 )
 
+
                 zoom_filters.append(
+
                     "crop="
+
                     "w='iw/"
-                    f"if(between(t,{start},{end}),{scale},1)':"
+                    f"if(between(t,{start},{end}),"
+                    f"{scale},1)':"
+
                     "h='ih/"
-                    f"if(between(t,{start},{end}),{scale},1)':"
+                    f"if(between(t,{start},{end}),"
+                    f"{scale},1)':"
+
                     "x='(iw-ow)/2':"
+
                     "y='(ih-oh)/2'"
                 )
+
 
             zoom_filters.append(
                 "setsar=1"
             )
 
+
             zoom_command = [
                 "ffmpeg",
                 "-y",
 
-                "-i", cut_path,
+                "-i",
+                cut_path,
 
                 "-vf",
                 ",".join(
                     zoom_filters
                 ),
 
-                "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-threads", "1",
+                "-c:v",
+                "libx264",
 
-                "-c:a", "copy",
+                "-preset",
+                "ultrafast",
 
-                "-movflags", "+faststart",
+                "-threads",
+                "1",
+
+                "-c:a",
+                "copy",
+
+                "-movflags",
+                "+faststart",
 
                 zoom_path
             ]
 
+
             run_ffmpeg(
                 zoom_command
             )
+
 
         else:
 
@@ -490,11 +670,12 @@ def edit_video():
             )
 
 
-        # ==============================
-        # ЭТАП 3 — TEXT / SUBTITLE
-        # ==============================
+        # ==================================
+        # ЭТАП 3 — СУБТИТРЫ + HIGHLIGHT
+        # ==================================
 
         drawtext_filters = []
+
 
         for index, item in enumerate(
             text_actions
@@ -510,13 +691,20 @@ def edit_video():
                 cuts
             )
 
+
             if end <= start:
                 continue
+
+
+            # --------------------------
+            # Основной субтитр
+            # --------------------------
 
             text_file = os.path.join(
                 WORK_DIR,
                 f"{job_id}_text_{index}.txt"
             )
+
 
             with open(
                 text_file,
@@ -528,26 +716,114 @@ def edit_video():
                     item["text"]
                 )
 
+
             text_files.append(
                 text_file
             )
 
+
             drawtext_filters.append(
+
                 "drawtext="
+
                 f"fontfile={FONT_PATH}:"
+
                 f"textfile={text_file}:"
+
                 "fontsize=h*0.022:"
+
                 "fontcolor=white:"
+
                 "borderw=1:"
+
                 "bordercolor=black@0.85:"
+
                 "box=1:"
+
                 "boxcolor=black@0.30:"
+
                 "boxborderw=4:"
+
                 "x=(w-text_w)/2:"
+
                 "y=h*0.72:"
+
                 f"enable='between(t,{start},{end})'"
             )
 
+
+            # --------------------------
+            # HIGHLIGHT
+            # --------------------------
+
+            highlight = str(
+                item.get(
+                    "highlight",
+                    ""
+                )
+            ).strip()
+
+
+            if highlight:
+
+                highlight_file = os.path.join(
+                    WORK_DIR,
+                    f"{job_id}_highlight_{index}.txt"
+                )
+
+
+                with open(
+                    highlight_file,
+                    "w",
+                    encoding="utf-8"
+                ) as f:
+
+                    f.write(
+                        highlight
+                    )
+
+
+                highlight_files.append(
+                    highlight_file
+                )
+
+
+                drawtext_filters.append(
+
+                    "drawtext="
+
+                    f"fontfile={FONT_PATH}:"
+
+                    f"textfile={highlight_file}:"
+
+                    # чуть крупнее основного текста
+                    "fontsize=h*0.026:"
+
+                    # яркий акцент
+                    "fontcolor=yellow:"
+
+                    "borderw=1:"
+
+                    "bordercolor=black@0.90:"
+
+                    "box=1:"
+
+                    "boxcolor=black@0.35:"
+
+                    "boxborderw=4:"
+
+                    "x=(w-text_w)/2:"
+
+                    # располагаем над субтитром
+                    "y=h*0.665:"
+
+                    f"enable='between(t,{start},{end})'"
+                )
+
+
+        # ==================================
+        # РЕНДЕР ТЕКСТА
+        # ==================================
 
         if drawtext_filters:
 
@@ -555,27 +831,37 @@ def edit_video():
                 "ffmpeg",
                 "-y",
 
-                "-i", zoom_path,
+                "-i",
+                zoom_path,
 
                 "-vf",
                 ",".join(
                     drawtext_filters
                 ),
 
-                "-c:v", "libx264",
-                "-preset", "ultrafast",
-                "-threads", "1",
+                "-c:v",
+                "libx264",
 
-                "-c:a", "copy",
+                "-preset",
+                "ultrafast",
 
-                "-movflags", "+faststart",
+                "-threads",
+                "1",
+
+                "-c:a",
+                "copy",
+
+                "-movflags",
+                "+faststart",
 
                 output_path
             ]
 
+
             run_ffmpeg(
                 text_command
             )
+
 
         else:
 
@@ -585,35 +871,52 @@ def edit_video():
             )
 
 
+        # ==================================
+        # ОТПРАВЛЯЕМ VIDEO
+        # ==================================
+
         return send_file(
             output_path,
-            mimetype="video/mp4",
-            as_attachment=True,
-            download_name="edited_reel.mp4"
+
+            mimetype=
+                "video/mp4",
+
+            as_attachment=
+                True,
+
+            download_name=
+                "edited_reel.mp4"
         )
 
 
     except subprocess.CalledProcessError as e:
 
         error_text = (
+
             e.stderr.decode(
                 errors="ignore"
             )
+
             if e.stderr
+
             else str(e)
         )
+
 
         print(
             "FFMPEG ERROR:",
             error_text
         )
 
+
         return jsonify({
+
             "error":
-            "FFmpeg processing failed",
+                "FFmpeg processing failed",
 
             "details":
-            error_text[-6000:]
+                error_text[-6000:]
+
         }), 500
 
 
@@ -624,39 +927,53 @@ def edit_video():
             str(e)
         )
 
+
         return jsonify({
-            "error": str(e)
+            "error":
+                str(e)
         }), 500
 
 
     finally:
 
         cleanup_paths = [
+
             input_path,
             cut_path,
             zoom_path,
-            *text_files
+
+            *text_files,
+            *highlight_files
         ]
+
 
         for path in cleanup_paths:
 
-            if os.path.exists(path):
+            if os.path.exists(
+                path
+            ):
 
                 try:
-                    os.remove(path)
+
+                    os.remove(
+                        path
+                    )
 
                 except Exception:
+
                     pass
 
 
 if __name__ == "__main__":
 
     port = int(
+
         os.environ.get(
             "PORT",
             10000
         )
     )
+
 
     app.run(
         host="0.0.0.0",
