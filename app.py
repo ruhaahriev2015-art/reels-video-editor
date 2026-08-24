@@ -29,22 +29,14 @@ def health():
 
 
 def map_time_after_cuts(time_value, cuts):
-    """
-    Переводит таймкод исходного видео
-    в таймкод после удаления CUT-участков.
-    """
-
     time_value = float(time_value)
     removed = 0.0
 
     for start, end in cuts:
-
         if time_value >= end:
             removed += end - start
-
         elif time_value > start:
             return max(0.0, start - removed)
-
         else:
             break
 
@@ -60,7 +52,6 @@ def edit_video():
         }), 400
 
     video = request.files["video"]
-
     actions_raw = request.form.get("actions", "[]")
 
     try:
@@ -91,6 +82,7 @@ def edit_video():
 
     cuts = []
     text_actions = []
+    zoom_actions = []
     text_files = []
 
     for action in actions:
@@ -120,6 +112,27 @@ def edit_video():
                     "text": text
                 })
 
+        elif action_type == "ZOOM":
+
+            start = float(action.get("start", 0))
+            end = float(action.get("end", start + 2))
+
+            scale = float(
+                action.get("scale", 1.10)
+            )
+
+            scale = max(
+                1.01,
+                min(scale, 1.25)
+            )
+
+            if end > start:
+                zoom_actions.append({
+                    "start": start,
+                    "end": end,
+                    "scale": scale
+                })
+
     cuts.sort()
 
     try:
@@ -137,7 +150,8 @@ def edit_video():
                 "-c:v", "libx264",
                 "-preset", "ultrafast",
                 "-threads", "1",
-                "-x264-params", "rc-lookahead=0:sync-lookahead=0",
+                "-x264-params",
+                "rc-lookahead=0:sync-lookahead=0",
                 "-c:a", "aac",
                 "-movflags", "+faststart",
                 cut_path
@@ -222,7 +236,8 @@ def edit_video():
                 "-c:v", "libx264",
                 "-preset", "ultrafast",
                 "-threads", "1",
-                "-x264-params", "rc-lookahead=0:sync-lookahead=0",
+                "-x264-params",
+                "rc-lookahead=0:sync-lookahead=0",
                 "-c:a", "aac",
                 "-movflags", "+faststart",
                 cut_path
@@ -236,85 +251,122 @@ def edit_video():
         )
 
         # --------------------------------
-        # ЭТАП 2 — TEXT
+        # ЭТАП 2 — TEXT + ZOOM
         # --------------------------------
 
-        if text_actions:
+        video_filters = []
 
-            drawtext_filters = []
+        # ---------- TEXT ----------
 
-            for index, item in enumerate(text_actions):
+        for index, item in enumerate(text_actions):
 
-                text_file = os.path.join(
-                    WORK_DIR,
-                    f"{job_id}_text_{index}.txt"
-                )
+            text_file = os.path.join(
+                WORK_DIR,
+                f"{job_id}_text_{index}.txt"
+            )
 
-                with open(
-                    text_file,
-                    "w",
-                    encoding="utf-8"
-                ) as f:
-                    f.write(item["text"])
+            with open(
+                text_file,
+                "w",
+                encoding="utf-8"
+            ) as f:
+                f.write(item["text"])
 
-                text_files.append(text_file)
+            text_files.append(text_file)
 
-                start = map_time_after_cuts(
-                    item["start"],
-                    cuts
-                )
+            start = map_time_after_cuts(
+                item["start"],
+                cuts
+            )
 
-                end = map_time_after_cuts(
-                    item["end"],
-                    cuts
-                )
+            end = map_time_after_cuts(
+                item["end"],
+                cuts
+            )
 
-                if end <= start:
-                    continue
+            if end <= start:
+                continue
 
-drawtext_filters.append(
-    "drawtext="
-    f"fontfile={FONT_PATH}:"
-    f"textfile={text_file}:"
-    "fontcolor=white:"
-    "fontsize=h*0.035:"
-    "box=1:"
-    "boxcolor=black@0.60:"
-    "boxborderw=12:"
-    "x=(w-text_w)/2:"
-    "y=h*0.08:"
-    f"enable='between(t,{start},{end})'"
-)
+            video_filters.append(
+                "drawtext="
+                f"fontfile={FONT_PATH}:"
+                f"textfile={text_file}:"
+                "fontcolor=white:"
+                "fontsize=h*0.035:"
+                "box=1:"
+                "boxcolor=black@0.60:"
+                "boxborderw=12:"
+                "x=(w-text_w)/2:"
+                "y=h*0.08:"
+                f"enable='between(t,{start},{end})'"
+            )
 
-            if drawtext_filters:
+        # ---------- ZOOM ----------
 
-                text_command = [
-                    "ffmpeg",
-                    "-y",
-                    "-i", cut_path,
-                    "-vf",
-                    ",".join(drawtext_filters),
-                    "-c:v", "libx264",
-                    "-preset", "ultrafast",
-                    "-threads", "1",
-                    "-x264-params", "rc-lookahead=0:sync-lookahead=0",
-                    "-c:a", "copy",
-                    "-movflags", "+faststart",
-                    output_path
-                ]
+        for item in zoom_actions:
 
-                subprocess.run(
-                    text_command,
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE
-                )
+            start = map_time_after_cuts(
+                item["start"],
+                cuts
+            )
 
-            else:
-                os.replace(cut_path, output_path)
+            end = map_time_after_cuts(
+                item["end"],
+                cuts
+            )
+
+            scale = item["scale"]
+
+            if end <= start:
+                continue
+
+            zoom_width = f"iw/{scale}"
+            zoom_height = f"ih/{scale}"
+
+            video_filters.append(
+                "crop="
+                f"{zoom_width}:"
+                f"{zoom_height}:"
+                f"(iw-{zoom_width})/2:"
+                f"(ih-{zoom_height})/2:"
+                f"enable='between(t,{start},{end})'"
+            )
+
+            video_filters.append(
+                "scale=iw:ih"
+            )
+
+        if video_filters:
+
+            final_command = [
+                "ffmpeg",
+                "-y",
+                "-i", cut_path,
+                "-vf",
+                ",".join(video_filters),
+                "-c:v", "libx264",
+                "-preset", "ultrafast",
+                "-threads", "1",
+                "-x264-params",
+                "rc-lookahead=0:sync-lookahead=0",
+                "-c:a", "copy",
+                "-movflags", "+faststart",
+                output_path
+            ]
+
+            subprocess.run(
+                final_command,
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
 
         else:
-            os.replace(cut_path, output_path)
+
+            os.replace(
+                cut_path,
+                output_path
+            )
 
         return send_file(
             output_path,
