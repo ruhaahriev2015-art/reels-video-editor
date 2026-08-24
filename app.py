@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import uuid
 import subprocess
@@ -10,8 +11,10 @@ app = Flask(__name__)
 WORK_DIR = "/tmp/reels_editor"
 os.makedirs(WORK_DIR, exist_ok=True)
 
-FONT_PATH = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 
+# =========================================================
+# HEALTH
+# =========================================================
 
 @app.route("/", methods=["GET"])
 def home():
@@ -27,6 +30,10 @@ def health():
         "status": "ok"
     })
 
+
+# =========================================================
+# FFmpeg helpers
+# =========================================================
 
 def run_ffmpeg(command):
     subprocess.run(
@@ -53,16 +60,71 @@ def get_duration(path):
     )
 
 
+def get_video_size(path):
+    command = [
+        "ffprobe",
+        "-v", "error",
+        "-select_streams", "v:0",
+        "-show_entries", "stream=width,height",
+        "-of", "json",
+        path
+    ]
+
+    raw = subprocess.check_output(command).decode()
+    data = json.loads(raw)
+
+    stream = data["streams"][0]
+
+    return int(stream["width"]), int(stream["height"])
+
+
+# =========================================================
+# CUT helpers
+# =========================================================
+
+def merge_cuts(cuts):
+    if not cuts:
+        return []
+
+    cuts = sorted(cuts)
+
+    merged = [cuts[0]]
+
+    for start, end in cuts[1:]:
+
+        last_start, last_end = merged[-1]
+
+        if start <= last_end:
+
+            merged[-1] = (
+                last_start,
+                max(last_end, end)
+            )
+
+        else:
+            merged.append(
+                (start, end)
+            )
+
+    return merged
+
+
 def map_time_after_cuts(time_value, cuts):
+
     time_value = float(time_value)
+
     removed = 0.0
 
     for start, end in cuts:
 
         if time_value >= end:
-            removed += end - start
+
+            removed += (
+                end - start
+            )
 
         elif time_value > start:
+
             return max(
                 0.0,
                 start - removed
@@ -77,46 +139,222 @@ def map_time_after_cuts(time_value, cuts):
     )
 
 
-def merge_cuts(cuts):
-    if not cuts:
-        return []
+# =========================================================
+# ASS subtitles
+# =========================================================
 
-    cuts = sorted(cuts)
-    merged = [cuts[0]]
+def ass_time(seconds):
 
-    for start, end in cuts[1:]:
+    seconds = max(
+        0.0,
+        float(seconds)
+    )
 
-        last_start, last_end = merged[-1]
+    hours = int(
+        seconds // 3600
+    )
 
-        if start <= last_end:
-            merged[-1] = (
-                last_start,
-                max(last_end, end)
+    minutes = int(
+        (seconds % 3600) // 60
+    )
+
+    secs = seconds % 60
+
+    return (
+        f"{hours}:"
+        f"{minutes:02d}:"
+        f"{secs:05.2f}"
+    )
+
+
+def escape_ass_text(text):
+
+    text = str(text)
+
+    # ASS управляющие символы
+    text = text.replace(
+        "\\",
+        r"\\"
+    )
+
+    text = text.replace(
+        "{",
+        r"\{"
+    )
+
+    text = text.replace(
+        "}",
+        r"\}"
+    )
+
+    text = text.replace(
+        "\n",
+        r"\N"
+    )
+
+    return text
+
+
+def add_highlight(text, highlight):
+
+    text = str(text).strip()
+    highlight = str(highlight).strip()
+
+    safe_text = escape_ass_text(
+        text
+    )
+
+    if not highlight:
+        return safe_text
+
+    # Ищем highlight внутри исходного текста
+    pattern = re.compile(
+        re.escape(highlight),
+        re.IGNORECASE
+    )
+
+    match = pattern.search(
+        text
+    )
+
+    if not match:
+        return safe_text
+
+    before = escape_ass_text(
+        text[:match.start()]
+    )
+
+    selected = escape_ass_text(
+        text[
+            match.start():
+            match.end()
+        ]
+    )
+
+    after = escape_ass_text(
+        text[match.end():]
+    )
+
+    # ASS:
+    # жёлтый = BBGGRR = 00FFFF
+    # белый = FFFFFF
+
+    return (
+        before
+        + r"{\c&H0000FFFF&}"
+        + selected
+        + r"{\c&H00FFFFFF&}"
+        + after
+    )
+
+
+def create_ass_file(
+    path,
+    width,
+    height,
+    subtitles
+):
+
+    # примерно как fontsize=h*0.022
+    font_size = max(
+        18,
+        int(height * 0.022)
+    )
+
+    # Субтитры располагаем примерно
+    # в районе 72% высоты кадра
+    bottom_margin = int(
+        height * 0.24
+    )
+
+    header = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: {width}
+PlayResY: {height}
+ScaledBorderAndShadow: yes
+WrapStyle: 2
+
+[V4+ Styles]
+Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding
+Style: Default,DejaVu Sans,{font_size},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,3,1,0,2,35,35,{bottom_margin},1
+
+[Events]
+Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
+"""
+
+    lines = [
+        header
+    ]
+
+    for item in subtitles:
+
+        start = ass_time(
+            item["start"]
+        )
+
+        end = ass_time(
+            item["end"]
+        )
+
+        formatted_text = add_highlight(
+            item["text"],
+            item.get(
+                "highlight",
+                ""
             )
-        else:
-            merged.append(
-                (start, end)
-            )
+        )
 
-    return merged
+        line = (
+            f"Dialogue: 0,"
+            f"{start},"
+            f"{end},"
+            f"Default,,0,0,0,,"
+            f"{formatted_text}\n"
+        )
 
+        lines.append(
+            line
+        )
+
+    with open(
+        path,
+        "w",
+        encoding="utf-8"
+    ) as file:
+
+        file.writelines(
+            lines
+        )
+
+
+# =========================================================
+# EDIT
+# =========================================================
 
 @app.route("/edit", methods=["POST"])
 def edit_video():
 
     if "video" not in request.files:
+
         return jsonify({
-            "error": "Video file is required"
+            "error":
+            "Video file is required"
         }), 400
 
-    video = request.files["video"]
+
+    video = request.files[
+        "video"
+    ]
+
 
     actions_raw = request.form.get(
         "actions",
         "[]"
     )
 
+
     try:
+
         actions = json.loads(
             actions_raw
         )
@@ -133,9 +371,10 @@ def edit_video():
 
         return jsonify({
             "error":
-                "Invalid actions JSON",
+            "Invalid actions JSON",
+
             "details":
-                str(e)
+            str(e)
         }), 400
 
 
@@ -164,9 +403,10 @@ def edit_video():
         f"{job_id}_output.mp4"
     )
 
-
-    text_files = []
-    highlight_files = []
+    ass_path = os.path.join(
+        WORK_DIR,
+        f"{job_id}_subtitles.ass"
+    )
 
 
     video.save(
@@ -181,9 +421,9 @@ def edit_video():
 
     try:
 
-        # ==================================
-        # ЧИТАЕМ МОНТАЖНЫЕ КОМАНДЫ
-        # ==================================
+        # =================================================
+        # READ ACTIONS
+        # =================================================
 
         for action in actions:
 
@@ -195,9 +435,9 @@ def edit_video():
             ).upper().strip()
 
 
-            # --------------------------
+            # ----------------------
             # CUT
-            # --------------------------
+            # ----------------------
 
             if action_type == "CUT":
 
@@ -225,9 +465,9 @@ def edit_video():
                     )
 
 
-            # --------------------------
+            # ----------------------
             # TEXT / SUBTITLE
-            # --------------------------
+            # ----------------------
 
             elif action_type in (
                 "TEXT",
@@ -264,21 +504,29 @@ def edit_video():
 
 
                 if (
-                    text and
+                    text
+                    and
                     end > start
                 ):
 
                     text_actions.append({
-                        "start": start,
-                        "end": end,
-                        "text": text,
-                        "highlight": highlight
+                        "start":
+                            start,
+
+                        "end":
+                            end,
+
+                        "text":
+                            text,
+
+                        "highlight":
+                            highlight
                     })
 
 
-            # --------------------------
+            # ----------------------
             # ZOOM
-            # --------------------------
+            # ----------------------
 
             elif action_type == "ZOOM":
 
@@ -332,9 +580,9 @@ def edit_video():
         )
 
 
-        # ==================================
-        # ЭТАП 1 — CUT
-        # ==================================
+        # =================================================
+        # STAGE 1 — CUT
+        # =================================================
 
         if not cuts:
 
@@ -366,6 +614,7 @@ def edit_video():
                 cut_path
             ]
 
+
             run_ffmpeg(
                 command
             )
@@ -379,6 +628,7 @@ def edit_video():
 
 
             keep_segments = []
+
             current = 0.0
 
 
@@ -436,6 +686,7 @@ def edit_video():
 
 
             filters = []
+
             concat_inputs = []
 
 
@@ -446,6 +697,7 @@ def edit_video():
                 keep_segments
             ):
 
+
                 filters.append(
                     f"[0:v]"
                     f"trim=start={start}:end={end},"
@@ -453,12 +705,14 @@ def edit_video():
                     f"[v{index}]"
                 )
 
+
                 filters.append(
                     f"[0:a]"
                     f"atrim=start={start}:end={end},"
                     f"asetpts=PTS-STARTPTS"
                     f"[a{index}]"
                 )
+
 
                 concat_inputs.append(
                     f"[v{index}]"
@@ -522,11 +776,12 @@ def edit_video():
             )
 
 
-        # ==================================
-        # ЭТАП 2 — ZOOM
-        # ==================================
+        # =================================================
+        # STAGE 2 — ZOOM
+        # =================================================
 
         mapped_zooms = []
+
 
         cut_duration = get_duration(
             cut_path
@@ -584,9 +839,17 @@ def edit_video():
 
             for item in mapped_zooms:
 
-                start = item["start"]
-                end = item["end"]
-                scale = item["scale"]
+                start = item[
+                    "start"
+                ]
+
+                end = item[
+                    "end"
+                ]
+
+                scale = item[
+                    "scale"
+                ]
 
 
                 zoom_filters.append(
@@ -670,16 +933,19 @@ def edit_video():
             )
 
 
-        # ==================================
-        # ЭТАП 3 — СУБТИТРЫ + HIGHLIGHT
-        # ==================================
+        # =================================================
+        # STAGE 3 — SUBTITLES
+        # =================================================
 
-        drawtext_filters = []
+        mapped_texts = []
 
 
-        for index, item in enumerate(
-            text_actions
-        ):
+        final_duration = get_duration(
+            zoom_path
+        )
+
+
+        for item in text_actions:
 
             start = map_time_after_cuts(
                 item["start"],
@@ -692,140 +958,64 @@ def edit_video():
             )
 
 
+            start = max(
+                0.0,
+                min(
+                    start,
+                    final_duration
+                )
+            )
+
+            end = max(
+                0.0,
+                min(
+                    end,
+                    final_duration
+                )
+            )
+
+
             if end <= start:
                 continue
 
 
-            # --------------------------
-            # Основной субтитр
-            # --------------------------
+            mapped_texts.append({
+                "start":
+                    start,
 
-            text_file = os.path.join(
-                WORK_DIR,
-                f"{job_id}_text_{index}.txt"
-            )
+                "end":
+                    end,
 
+                "text":
+                    item["text"],
 
-            with open(
-                text_file,
-                "w",
-                encoding="utf-8"
-            ) as f:
-
-                f.write(
-                    item["text"]
-                )
-
-
-            text_files.append(
-                text_file
-            )
-
-
-            drawtext_filters.append(
-
-                "drawtext="
-
-                f"fontfile={FONT_PATH}:"
-
-                f"textfile={text_file}:"
-
-                "fontsize=h*0.022:"
-
-                "fontcolor=white:"
-
-                "borderw=1:"
-
-                "bordercolor=black@0.85:"
-
-                "box=1:"
-
-                "boxcolor=black@0.30:"
-
-                "boxborderw=4:"
-
-                "x=(w-text_w)/2:"
-
-                "y=h*0.72:"
-
-                f"enable='between(t,{start},{end})'"
-            )
-
-
-            # --------------------------
-            # HIGHLIGHT
-            # --------------------------
-
-            highlight = str(
-                item.get(
-                    "highlight",
-                    ""
-                )
-            ).strip()
-
-
-            if highlight:
-
-                highlight_file = os.path.join(
-                    WORK_DIR,
-                    f"{job_id}_highlight_{index}.txt"
-                )
-
-
-                with open(
-                    highlight_file,
-                    "w",
-                    encoding="utf-8"
-                ) as f:
-
-                    f.write(
-                        highlight
+                "highlight":
+                    item.get(
+                        "highlight",
+                        ""
                     )
+            })
 
 
-                highlight_files.append(
-                    highlight_file
-                )
+        if mapped_texts:
+
+            width, height = get_video_size(
+                zoom_path
+            )
 
 
-                drawtext_filters.append(
-
-                    "drawtext="
-
-                    f"fontfile={FONT_PATH}:"
-
-                    f"textfile={highlight_file}:"
-
-                    # чуть крупнее основного текста
-                    "fontsize=h*0.026:"
-
-                    # яркий акцент
-                    "fontcolor=yellow:"
-
-                    "borderw=1:"
-
-                    "bordercolor=black@0.90:"
-
-                    "box=1:"
-
-                    "boxcolor=black@0.35:"
-
-                    "boxborderw=4:"
-
-                    "x=(w-text_w)/2:"
-
-                    # располагаем над субтитром
-                    "y=h*0.665:"
-
-                    f"enable='between(t,{start},{end})'"
-                )
+            create_ass_file(
+                ass_path,
+                width,
+                height,
+                mapped_texts
+            )
 
 
-        # ==================================
-        # РЕНДЕР ТЕКСТА
-        # ==================================
+            subtitle_filter = (
+                f"subtitles={ass_path}"
+            )
 
-        if drawtext_filters:
 
             text_command = [
                 "ffmpeg",
@@ -835,9 +1025,7 @@ def edit_video():
                 zoom_path,
 
                 "-vf",
-                ",".join(
-                    drawtext_filters
-                ),
+                subtitle_filter,
 
                 "-c:v",
                 "libx264",
@@ -871,9 +1059,9 @@ def edit_video():
             )
 
 
-        # ==================================
-        # ОТПРАВЛЯЕМ VIDEO
-        # ==================================
+        # =================================================
+        # RETURN
+        # =================================================
 
         return send_file(
             output_path,
@@ -937,13 +1125,10 @@ def edit_video():
     finally:
 
         cleanup_paths = [
-
             input_path,
             cut_path,
             zoom_path,
-
-            *text_files,
-            *highlight_files
+            ass_path
         ]
 
 
@@ -967,7 +1152,6 @@ def edit_video():
 if __name__ == "__main__":
 
     port = int(
-
         os.environ.get(
             "PORT",
             10000
