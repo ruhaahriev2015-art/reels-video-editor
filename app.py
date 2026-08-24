@@ -54,16 +54,10 @@ def get_duration(path):
 
 
 def map_time_after_cuts(time_value, cuts):
-    """
-    Перевод таймкода исходного видео
-    в таймкод после CUT.
-    """
-
     time_value = float(time_value)
     removed = 0.0
 
     for start, end in cuts:
-
         if time_value >= end:
             removed += end - start
 
@@ -77,19 +71,13 @@ def map_time_after_cuts(time_value, cuts):
 
 
 def merge_cuts(cuts):
-    """
-    Объединяет пересекающиеся CUT.
-    """
-
     if not cuts:
         return []
 
     cuts = sorted(cuts)
-
     merged = [cuts[0]]
 
     for start, end in cuts[1:]:
-
         last_start, last_end = merged[-1]
 
         if start <= last_end:
@@ -162,9 +150,9 @@ def edit_video():
 
     try:
 
-        # ==========================================
-        # ЧИТАЕМ МОНТАЖНЫЕ КОМАНДЫ
-        # ==========================================
+        # ==============================
+        # ЧИТАЕМ КОМАНДЫ
+        # ==============================
 
         for action in actions:
 
@@ -172,10 +160,7 @@ def edit_video():
                 action.get("action", "")
             ).upper().strip()
 
-            # -------------------------
             # CUT
-            # -------------------------
-
             if action_type == "CUT":
 
                 start = float(
@@ -191,11 +176,9 @@ def edit_video():
                         (start, end)
                     )
 
-            # -------------------------
-            # TEXT
-            # -------------------------
+            # TEXT / SUBTITLE
+            elif action_type in ("TEXT", "SUBTITLE"):
 
-           elif action_type in ("TEXT", "SUBTITLE"):
                 start = float(
                     action.get("start", 0)
                 )
@@ -222,10 +205,7 @@ def edit_video():
                         "text": text
                     })
 
-            # -------------------------
             # ZOOM
-            # -------------------------
-
             elif action_type == "ZOOM":
 
                 start = float(
@@ -246,7 +226,6 @@ def edit_video():
                     )
                 )
 
-                # Ограничиваем увеличение
                 scale = max(
                     1.01,
                     min(scale, 1.35)
@@ -263,9 +242,9 @@ def edit_video():
 
         cuts = merge_cuts(cuts)
 
-        # ==========================================
+        # ==============================
         # ЭТАП 1 — CUT
-        # ==========================================
+        # ==============================
 
         if not cuts:
 
@@ -295,7 +274,6 @@ def edit_video():
             )
 
             keep_segments = []
-
             current = 0.0
 
             for start, end in cuts:
@@ -341,7 +319,6 @@ def edit_video():
                 }), 400
 
             filters = []
-
             concat_inputs = []
 
             for index, (
@@ -405,9 +382,9 @@ def edit_video():
             run_ffmpeg(command)
 
 
-        # ==========================================
+        # ==============================
         # ЭТАП 2 — ZOOM
-        # ==========================================
+        # ==============================
 
         mapped_zooms = []
 
@@ -448,16 +425,6 @@ def edit_video():
 
         if mapped_zooms:
 
-            #
-            # Безопасный ZOOM:
-            #
-            # scale увеличивает изображение,
-            # crop возвращает исходный размер.
-            #
-            # Размер кадра на выходе
-            # всегда остаётся тем же.
-            #
-
             zoom_filters = []
 
             for item in mapped_zooms:
@@ -484,11 +451,6 @@ def edit_video():
                     "x='(iw-ow)/2':"
                     "y='(ih-oh)/2'"
                 )
-
-            #
-            # В конце возвращаем размер
-            # к исходной пропорции.
-            #
 
             zoom_filters.append(
                 "setsar=1"
@@ -528,9 +490,9 @@ def edit_video():
             )
 
 
-        # ==========================================
-        # ЭТАП 3 — TEXT / СУБТИТРЫ
-        # ==========================================
+        # ==============================
+        # ЭТАП 3 — TEXT / SUBTITLE
+        # ==============================
 
         drawtext_filters = []
 
@@ -571,33 +533,18 @@ def edit_video():
             )
 
             drawtext_filters.append(
-
                 "drawtext="
-
                 f"fontfile={FONT_PATH}:"
-
                 f"textfile={text_file}:"
-
-                # Размер уменьшен
-                "fontsize=h*0.030:"
-
+                "fontsize=h*0.022:"
                 "fontcolor=white:"
-
-                # тонкая обводка
-                "borderw=2:"
+                "borderw=1:"
                 "bordercolor=black@0.85:"
-
-                # небольшая подложка
                 "box=1:"
-                "boxcolor=black@0.35:"
-                "boxborderw=7:"
-
-                # центр
+                "boxcolor=black@0.30:"
+                "boxborderw=4:"
                 "x=(w-text_w)/2:"
-
-                # нижняя часть Reels
                 "y=h*0.72:"
-
                 f"enable='between(t,{start},{end})'"
             )
 
@@ -637,10 +584,6 @@ def edit_video():
                 output_path
             )
 
-
-        # ==========================================
-        # ОТПРАВЛЯЕМ ГОТОВОЕ VIDEO
-        # ==========================================
 
         return send_file(
             output_path,
@@ -687,10 +630,6 @@ def edit_video():
 
 
     finally:
-
-        #
-        # Удаляем временные файлы.
-        #
 
         cleanup_paths = [
             input_path,
