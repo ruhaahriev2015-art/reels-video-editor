@@ -25,7 +25,7 @@ app.config["MAX_CONTENT_LENGTH"] = (
 WORK_DIR = "/tmp/reels_editor"
 os.makedirs(WORK_DIR, exist_ok=True)
 
-SERVICE_VERSION = "2.0.0"
+SERVICE_VERSION = "2.0.1"
 SUPPORTED_ACTIONS = {
     "CUT",
     "TEXT",
@@ -196,8 +196,15 @@ def detect_silences(
     command = [
         "ffmpeg",
         "-hide_banner",
+        "-nostats",
         "-i",
         path,
+        # Silence detection only needs the audio stream. Disabling video
+        # decoding makes analysis substantially faster on small Render
+        # instances and keeps longer Reels below upstream request limits.
+        "-map",
+        "0:a:0",
+        "-vn",
         "-af",
         (
             f"silencedetect=noise={noise_db}dB:"
