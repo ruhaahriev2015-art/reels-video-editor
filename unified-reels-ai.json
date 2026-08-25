@@ -1,0 +1,2093 @@
+{
+  "name": "Единый Reels AI — сценарий + монтаж",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -448
+      ],
+      "id": "681bb0c7-bfe0-4cfe-8bac-f846d397bdfb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k",
+          "mode": "list",
+          "cachedResultName": "Agent AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "      Статус",
+              "lookupValue": "Новая"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -112,
+        -384
+      ],
+      "id": "b4104238-6b11-44d6-b33f-ca8271c96a87",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LbzmUAKUqfYXplhO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "db66f8a2-9a08-492e-8de7-d46e592ffb66",
+              "leftValue": "={{ $json['      Статус'] }}",
+              "rightValue": "=Готово",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        64,
+        -400
+      ],
+      "id": "450b1a05-ed64-4b35-a888-0660955e6462",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k",
+          "mode": "list",
+          "cachedResultName": "Agent AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{$json.row_number}}",
+            "      Hook": "={{$json.Hook}}",
+            "   Конфликт": "={{$json.Конфликт}}",
+            "   Сценарий": "={{$json.Сценарий}}",
+            "       Визуал": "={{$json.Визуал}}",
+            "         CTA ": "={{$json.CTA}}",
+            "      Статус": "={{$json.Статус}}",
+            "      Оценка": "={{$json.Оценка}}",
+            "  Улучшение": "={{$json.Улучшение}}",
+            "    Решение": "={{$json.Решение}}",
+            "   Проблемы": "={{$json.Проблемы}}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "    ID",
+              "displayName": "    ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "                       Тема ",
+              "displayName": "                       Тема ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "       Цель",
+              "displayName": "       Цель",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "         Аудитория  ",
+              "displayName": "         Аудитория  ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "      Hook",
+              "displayName": "      Hook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "   Конфликт",
+              "displayName": "   Конфликт",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "   Сценарий",
+              "displayName": "   Сценарий",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "       Визуал",
+              "displayName": "       Визуал",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "         CTA ",
+              "displayName": "         CTA ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "      Статус",
+              "displayName": "      Статус",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "      Оценка",
+              "displayName": "      Оценка",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "   Проблемы",
+              "displayName": "   Проблемы",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "  Улучшение",
+              "displayName": "  Улучшение",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "    Решение",
+              "displayName": "    Решение",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1664,
+        112
+      ],
+      "id": "b354dde6-ad7f-4fda-858f-f977bd958cbd",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LbzmUAKUqfYXplhO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Ответ модели\nconst text =\n  $json.output?.[0]?.content?.[0]?.text ??\n  $json.output_text ??\n  $json.text ??\n  '';\n\nlet data = {};\n\ntry {\n  data = JSON.parse(\n    String(text)\n      .replace(/```json/gi, '')\n      .replace(/```/g, '')\n      .trim()\n  );\n} catch (e) {\n  data = {};\n}\n\n\n// 2. Функция удаляет скрытые пробелы\n// из названий колонок Google Sheets\nfunction normalizeKeys(obj = {}) {\n  const clean = {};\n\n  for (const [key, value] of Object.entries(obj)) {\n    clean[String(key).trim()] = value;\n  }\n\n  return clean;\n}\n\n\n// 3. Текущий item из первого IF\nconst linkedRaw = $('If').item.json;\nconst linked = normalizeKeys(linkedRaw);\n\n\n// 4. Все строки, полученные из Google Sheets\nconst sheetRows = $('Get row(s) in sheet').all();\n\n\n// 5. Ищем исходную строку по row_number\nconst found = sheetRows.find(item => {\n  const row = normalizeKeys(item.json);\n\n  return String(row.row_number) ===\n         String(linked.row_number);\n});\n\n\n// 6. Нормализуем найденную строку\nconst source = normalizeKeys(\n  found?.json ?? linkedRaw\n);\n\n\n// 7. Возвращаем один item\nreturn {\n  json: {\n    row_number:\n      source.row_number ??\n      linked.row_number ??\n      null,\n\n    ID:\n      source.ID ??\n      linked.ID ??\n      '',\n\n    Тема:\n      source.Тема ??\n      linked.Тема ??\n      '',\n\n    Цель:\n      source.Цель ??\n      linked.Цель ??\n      '',\n\n    Аудитория:\n      source.Аудитория ??\n      linked.Аудитория ??\n      '',\n\n    Hook:\n      data.Hook ?? '',\n\n    Конфликт:\n      data.Конфликт ?? '',\n\n    Сценарий:\n      data.Сценарий ?? '',\n\n    Визуал:\n      data.Визуал ?? '',\n\n    CTA:\n      data.CTA ?? '',\n\n    Статус: 'Готово'\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        -400
+      ],
+      "id": "e0ac51c0-1c88-4dab-bcfc-184aecfb872c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты профессиональный контент-стратег Instagram врача-флеболога.\n\nТвоя задача — создавать сценарии Reels, которые удерживают внимание и вызывают сохранения.\n\nТема:\n{{$json.Тема}}\n\nЦелевая аудитория:\nлюди с проблемами вен, которые боятся осложнений и не понимают симптомы.\n\nСоздай:\n\n1. HOOK (первые 2 секунды)\n- без приветствия\n- с неожиданным утверждением\n- должен остановить прокрутку\n\n2. КОНФЛИКТ\n- главная ошибка пациента\n- чего люди боятся неправильно\n\n3. СЦЕНАРИЙ 30-45 секунд\n- разговорный стиль врача\n- простые слова\n- без сложных медицинских терминов\n\n4. ВИЗУАЛЬНЫЙ РЯД\nЧто происходит на экране каждую часть видео.\n\n5. CTA\nПризыв сохранить, написать вопрос или обратиться к врачу.\n\nЗапрещено:\n- ставить диагноз\n- обещать лечение\n- писать банальные советы\nВАЖНО:\nОтвет верни только в формате JSON.\nБез Markdown.\nБез пояснений.\n\nФормат:\n\n{\n\"Hook\":\"\",\n\"Конфликт\":\"\",\n\"Сценарий\":\"\",\n\"Визуал\":\"\",\n\"CTA\":\"\"\n}\nНе используй пугающие формулировки.\nНе создавай ощущение опасности без причины.\nИспользуй любопытство, а не страх."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        256,
+        -464
+      ],
+      "id": "41becf64-2295-4fac-8ccd-c18452b28b34",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты строгий редактор и критик Instagram Reels врача-флеболога.\n\nТвоя задача — НЕ переписывать сценарий.\nТвоя задача — оценить уже готовый сценарий.\n\nОцени его по следующим критериям:\n1. Сила Hook в первые 2 секунды.\n2. Эмоциональный конфликт.\n3. Понятность для обычного пациента.\n4. Удержание внимания.\n5. Конкретность и отсутствие банальных советов.\n6. Доверие к врачу.\n7. Потенциал сохранений и комментариев.\n\nПоставь итоговую оценку от 1 до 10.\n\nВерни ТОЛЬКО валидный JSON.\nБез Markdown.\nБез ```json.\nБез объяснений вне JSON.\n\nФормат строго такой:\n\n{\n  \"Оценка\": \"8/10\",\n  \"Проблемы\": \"Кратко перечисли основные слабые места\",\n  \"Улучшение\": \"Что конкретно необходимо усилить\",\n  \"Решение\": \"Оставить\"\n}\n\nПоле \"Решение\":\n- если оценка 8, 9 или 10 → \"Оставить\"\n- если оценка 1–7 → \"Переписать\"\n\nСценарий для оценки:\n\nHOOK:\n{{ $json.Hook }}\n\nКОНФЛИКТ:\n{{ $json.Конфликт }}\n\nСЦЕНАРИЙ:\n{{ $json.Сценарий }}\n\nВИЗУАЛ:\n{{ $json.Визуал }}\n\nCTA:\n{{ $json.CTA }}"
+            }
+          ]
+        },
+        "simplify": false,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        -400
+      ],
+      "id": "bc1fce3c-e65d-4175-94d5-b5a47df8774a",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const reviews = $input.all();\n\n// Берём 3 готовых сценария из предыдущего Code\nconst generatedItems = $('Code in JavaScript').all();\n\nreturn reviews.map((item, index) => {\n\n  const generated = generatedItems[index]?.json ?? {};\n\n  let text = '';\n  let review = {};\n\n  try {\n    text =\n      item.json.output?.[0]?.content?.[0]?.text ??\n      item.json.output_text ??\n      item.json.text ??\n      '';\n\n    text = String(text)\n      .replace(/```json/gi, '')\n      .replace(/```/g, '')\n      .trim();\n\n    review = text ? JSON.parse(text) : {};\n  } catch (e) {\n    review = {};\n  }\n\n  return {\n    json: {\n      row_number: generated.row_number ?? null,\n\n      ID: generated.ID ?? '',\n      Тема: generated.Тема ?? '',\n      Цель: generated.Цель ?? '',\n      Аудитория: generated.Аудитория ?? '',\n\n      Hook: generated.Hook ?? '',\n      Конфликт: generated.Конфликт ?? '',\n      Сценарий: generated.Сценарий ?? '',\n      Визуал: generated.Визуал ?? '',\n      CTA: generated.CTA ?? '',\n\n      Статус: 'Готово',\n\n      Оценка: review.Оценка ?? '',\n      Проблемы: review.Проблемы ?? '',\n      Улучшение: review.Улучшение ?? '',\n      Решение: review.Решение ?? ''\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        -384
+      ],
+      "id": "342c610f-2338-47dc-952d-d181b1c50713",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "09c15820-55f6-4a0c-9155-d64c723a3fce",
+              "leftValue": "={{ Number(String($json['Оценка']).split('/')[0]) }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1152,
+        -464
+      ],
+      "id": "5134f262-0e63-41e4-a018-f87a2d940fad",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты — главный редактор Instagram Reels врача-флеболога.\n\nТебе передан готовый сценарий Reels, который получил оценку ниже 8/10.\nТвоя задача — не создавать новый сценарий с нуля, а профессионально ДОРАБОТАТЬ существующий сценарий с учётом замечаний редактора.\n\nИСХОДНЫЕ ДАННЫЕ:\n\nТема:\n{{ $json[\"Тема\"] }}\n\nЦель:\n{{ $json[\"Цель\"] }}\n\nАудитория:\n{{ $json[\"Аудитория\"] }}\n\nТекущий Hook:\n{{ $json[\"Hook\"] }}\n\nТекущий конфликт:\n{{ $json[\"Конфликт\"] }}\n\nТекущий сценарий:\n{{ $json[\"Сценарий\"] }}\n\nТекущий визуал:\n{{ $json[\"Визуал\"] }}\n\nТекущий CTA:\n{{ $json[\"CTA\"] }}\n\nОЦЕНКА РЕДАКТОРА:\n{{ $json[\"Оценка\"] }}\n\nПРОБЛЕМЫ:\n{{ $json[\"Проблемы\"] }}\n\nЧТО НУЖНО УЛУЧШИТЬ:\n{{ $json[\"Улучшение\"] }}\n\nЗАДАЧА:\n\nИсправь конкретно указанные редактором проблемы.\n\nСохрани исходную тему, медицинский смысл, цель ролика и целевую аудиторию.\n\nУсиль первые 2 секунды ролика.\nHook должен сразу вызывать любопытство, узнавание проблемы или разрушать распространённое заблуждение.\n\nУбери общие, банальные и шаблонные фразы.\n\nНе используй запугивание пациента.\n\nНе ставь диагноз по симптомам.\n\nНе обещай результат лечения.\n\nМедицинские утверждения должны быть корректными.\n\nТекст должен звучать естественно, как речь врача перед камерой, а не как статья.\n\nСценарий должен подходить для Reels продолжительностью примерно 30–45 секунд.\n\nКонфликт должен создавать причину досмотреть ролик.\n\nCTA должен соответствовать цели ролика и не выглядеть навязчивой рекламой.\n\nВАЖНО:\nВерни ТОЛЬКО валидный JSON.\nНикакого Markdown.\nНе используй ```json.\nНе добавляй пояснений до или после JSON.\n\nИспользуй ТОЧНО эти названия полей:\n\n{\n  \"Hook\": \"\",\n  \"Конфликт\": \"\",\n  \"Сценарий\": \"\",\n  \"Визуал\": \"\",\n  \"CTA\": \"\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        -544
+      ],
+      "id": "5a7c9bbd-2762-4a19-8032-af1c06d64ee7",
+      "name": "Message a model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\n\n// Исходные 3 items из False-ветки If1.\n// В них уже есть row_number, ID, Тема, Цель, Аудитория,\n// а также старая версия сценария и замечания редактора.\nconst sourceItems = $('If1').all();\n\nreturn inputItems.map((item, index) => {\n  const source = sourceItems[index]?.json ?? {};\n\n  let text =\n    item.json.output?.[0]?.content?.[0]?.text ??\n    item.json.output_text ??\n    item.json.text ??\n    '';\n\n  let improved = {};\n\n  try {\n    const cleaned = String(text)\n      .replace(/```json/gi, '')\n      .replace(/```/g, '')\n      .trim();\n\n    improved = cleaned ? JSON.parse(cleaned) : {};\n  } catch (e) {\n    improved = {};\n  }\n\n  return {\n    json: {\n      row_number: source.row_number ?? null,\n      ID: source.ID ?? '',\n      Тема: source.Тема ?? '',\n      Цель: source.Цель ?? '',\n      Аудитория: source.Аудитория ?? '',\n\n      Hook: improved.Hook ?? source.Hook ?? '',\n      Конфликт: improved.Конфликт ?? source.Конфликт ?? '',\n      Сценарий: improved.Сценарий ?? source.Сценарий ?? '',\n      Визуал: improved.Визуал ?? source.Визуал ?? '',\n      CTA: improved.CTA ?? source.CTA ?? '',\n\n      Статус: 'Готово',\n\n      // Сохраняем первую оценку и замечания,\n      // чтобы дальше было понятно, почему сценарий переписывали.\n      Оценка: source.Оценка ?? '',\n      Проблемы: source.Проблемы ?? '',\n      Улучшение: source.Улучшение ?? '',\n      Решение: source.Решение ?? ''\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -400
+      ],
+      "id": "b9909222-ca92-429d-991e-5805fbf4f462",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты — строгий финальный редактор коротких Instagram Reels врача-флеболога.\n\nПеред тобой НОВАЯ версия сценария, уже доработанная после первой редакторской проверки.\n\nТвоя задача — НЕ переписывать сценарий.\nТвоя задача — строго оценить его готовность к публикации.\n\nНе завышай оценку.\n8/10 не является оценкой по умолчанию.\nЕсли сценарий средний, шаблонный или недостаточно удерживает внимание — ставь 5–7.\n9–10 ставь только действительно сильному сценарию.\n\nОЦЕНИ 10 КРИТЕРИЕВ:\n\n1. HOOK\nЗахватывает ли первая фраза внимание за первые 1–2 секунды?\nЕсть ли конкретная причина продолжить просмотр?\n\n2. КОНФЛИКТ\nЕсть ли заблуждение, страх, ошибка, неожиданное противоречие или вопрос, который хочется разрешить?\n\n3. УДЕРЖАНИЕ\nЕсть ли развитие мысли?\nВозникает ли новая информация по ходу ролика?\nНет ли ощущения, что ответ понятен уже после первых секунд?\n\n4. КОНКРЕТИКА\nЕсть ли конкретные симптомы, ситуации, наблюдения или примеры вместо общих фраз?\n\n5. ПОЛЬЗА\nПолучит ли зритель после просмотра понятный новый вывод?\n\n6. ЕСТЕСТВЕННОСТЬ РЕЧИ\nМожет ли врач естественно произнести этот текст перед камерой?\nНет ли канцелярита, искусственных или слишком рекламных формулировок?\n\n7. ВИЗУАЛ\nПомогает ли визуальный ряд удерживать внимание и объяснять содержание?\nСоответствует ли он словам врача?\n\n8. CTA\nЕсть ли естественная причина сохранить, прокомментировать, поделиться или подписаться?\nНе выглядит ли CTA шаблонным?\n\n9. МЕДИЦИНСКАЯ КОРРЕКТНОСТЬ\nНет ли постановки диагноза зрителю, необоснованных обещаний, запугивания или сомнительных медицинских утверждений?\n\n10. ПОТЕНЦИАЛ REELS\nЕсть ли у ролика причина выделиться среди типичного медицинского контента?\n\nСИСТЕМА ОЦЕНКИ:\n\nКаждый критерий оцени внутренне от 0 до 1.\n\n0 = критерий практически не выполнен.\n0.5 = выполнен частично.\n1 = выполнен хорошо.\n\nСложи результат и округли до целого числа от 1 до 10.\n\nИнтерпретация:\n\n1–4 = слабый сценарий, публикация не рекомендуется.\n5–6 = рабочая идея, но сценарий требует существенной доработки.\n7 = хороший, но заметно уступает сильному Reels.\n8 = сильный и готовый к публикации.\n9 = очень сильный, высокий потенциал удержания/сохранений.\n10 = исключительный; используй крайне редко.\n\nВАЖНО:\n\nНе повышай оценку только потому, что текст медицинский или полезный.\n\nОбщие фразы вроде:\n«следите за здоровьем»,\n«обратитесь к врачу»,\n«важно заботиться о себе»,\n«организм подаёт сигналы»\nсами по себе не добавляют баллов.\n\nНе требуй статистику или цифры, если они не нужны теме.\nНе предлагай выдумывать исследования, проценты, факты или медицинские данные.\n\nЕсли Hook шаблонный — сценарий не может получить выше 7/10.\n\nЕсли конфликт отсутствует — сценарий не может получить выше 7/10.\n\nЕсли сценарий состоит преимущественно из общих советов — не выше 6/10.\n\nЕсли есть потенциально опасное или явно некорректное медицинское утверждение — не выше 5/10.\n\nОцени только предоставленный сценарий. Не додумывай за автора.\n\nВОТ СЦЕНАРИЙ:\n\nТЕМА:\n{{$json.Тема}}\n\nЦЕЛЬ:\n{{$json.Цель}}\n\nАУДИТОРИЯ:\n{{$json.Аудитория}}\n\nHOOK:\n{{$json.Hook}}\n\nКОНФЛИКТ:\n{{$json.Конфликт}}\n\nСЦЕНАРИЙ:\n{{$json.Сценарий}}\n\nВИЗУАЛ:\n{{$json.Визуал}}\n\nCTA:\n{{$json.CTA}}\n\nВерни ТОЛЬКО валидный JSON.\nБез Markdown.\nБез ```json.\nБез текста до или после JSON.\n\nФормат:\n\n{\n  \"Оценка\": \"X/10\",\n  \"Проблемы\": \"Кратко назови 1–3 главные проблемы сценария\",\n  \"Улучшение\": \"Кратко укажи, что конкретно необходимо улучшить\",\n  \"Решение\": \"Принять или На доработку\"\n}\n\nПравило решения:\n\nесли оценка 8, 9 или 10:\n\"Решение\": \"Принять\"\n\nесли оценка от 1 до 7:\n\"Решение\": \"На доработку\""
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -144,
+        -176
+      ],
+      "id": "37e2dc26-fa75-4e68-8578-a207c425285c",
+      "name": "Message a model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const reviews = $input.all();\nconst scenarios = $('Code in JavaScript2').all();\n\nreturn reviews.map((item, index) => {\n\n  const scenario = scenarios[index]?.json ?? {};\n\n  // Получаем текст ответа финального критика\n  let text =\n    item.json.output?.[0]?.content?.[0]?.text ??\n    item.json.output_text ??\n    item.json.text ??\n    '';\n\n  // Удаляем ```json, если модель их добавила\n  const cleaned = String(text)\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  let review = {};\n\n  try {\n    review = JSON.parse(cleaned);\n  } catch (error) {\n    review = {\n      Оценка: '',\n      Проблемы: 'Ошибка разбора ответа модели',\n      Улучшение: '',\n      Решение: 'Проверить'\n    };\n  }\n\n  // Превращаем \"9/10\" в число 9\n  const score =\n    parseFloat(\n      String(review.Оценка ?? '')\n        .replace(',', '.')\n        .split('/')[0]\n    ) || 0;\n\n  return {\n    json: {\n\n      // Исходная строка Google Sheets\n      row_number: scenario.row_number ?? null,\n\n      ID: scenario.ID ?? '',\n      Тема: scenario.Тема ?? '',\n      Цель: scenario.Цель ?? '',\n      Аудитория: scenario.Аудитория ?? '',\n\n      // Улучшенный сценарий\n      Hook: scenario.Hook ?? '',\n      Конфликт: scenario.Конфликт ?? '',\n      Сценарий: scenario.Сценарий ?? '',\n      Визуал: scenario.Визуал ?? '',\n      CTA: scenario.CTA ?? '',\n\n      // Финальная проверка\n      Оценка: review.Оценка ?? '',\n      Балл: score,\n      Проблемы: review.Проблемы ?? '',\n      Улучшение: review.Улучшение ?? '',\n      Решение: review.Решение ?? '',\n\n      // Готов ли сценарий\n      Статус: score >= 8 ? 'Готово' : 'На доработку'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        -176
+      ],
+      "id": "b68888c9-3e8d-4fe3-9c36-a062eb00e296",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0f839c27-1fc8-4fc2-be6f-47c815900032",
+              "leftValue": "={{ $json.Балл }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        -176
+      ],
+      "id": "1229a960-a075-4558-bb44-c64c8f8e0dbb",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => ({\n  json: {\n    ...item.json,\n\n    // Сохраняем информацию о предыдущей проверке\n    Предыдущая_оценка: item.json.Оценка ?? '',\n    Предыдущий_балл: item.json.Балл ?? 0,\n    Замечания_редактора: item.json.Проблемы ?? '',\n    Требуемые_улучшения: item.json.Улучшение ?? '',\n\n    // Счётчик дополнительной доработки\n    Попытка: (Number(item.json.Попытка) || 0) + 1,\n\n    Статус: 'Повторная доработка'\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        592,
+        -112
+      ],
+      "id": "8e93f8b0-028c-4caa-8bbe-8a12f4429c51",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        864,
+        -176
+      ],
+      "id": "c219cc19-4e83-4b45-9271-a85a23408d3e",
+      "name": "Megre Final"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 11
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -432,
+        -240
+      ],
+      "id": "89df9233-95bd-4d13-b9d4-cb8ec1d920a7",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты — строгий редактор коротких Instagram Reels врача-флеболога.\n\nПеред тобой сценарий, который уже прошёл генерацию, первую доработку и повторную проверку редактором.\n\nОн НЕ набрал проходной балл 8/10.\n\nТвоя задача — не написать совершенно другой ролик, а точечно исправить именно те недостатки, которые указал редактор.\n\nТЕМА:\n{{$json.Тема}}\n\nЦЕЛЬ:\n{{$json.Цель}}\n\nАУДИТОРИЯ:\n{{$json.Аудитория}}\n\nТЕКУЩИЙ HOOK:\n{{$json.Hook}}\n\nТЕКУЩИЙ КОНФЛИКТ:\n{{$json.Конфликт}}\n\nТЕКУЩИЙ СЦЕНАРИЙ:\n{{$json.Сценарий}}\n\nТЕКУЩИЙ ВИЗУАЛ:\n{{$json.Визуал}}\n\nТЕКУЩИЙ CTA:\n{{$json.CTA}}\n\nОЦЕНКА РЕДАКТОРА:\n{{$json.Предыдущая_оценка}}\n\nПРОБЛЕМЫ:\n{{$json.Замечания_редактора}}\n\nЧТО НУЖНО УЛУЧШИТЬ:\n{{$json.Требуемые_улучшения}}\n\nТРЕБОВАНИЯ:\n\n1. Исправь все замечания редактора.\n2. Hook должен цеплять в первые 2 секунды.\n3. Не используй банальные фразы вроде:\n   \"Вы знали...\"\n   \"Многие не знают...\"\n   \"Давайте разберёмся...\"\n4. Добавь конкретику, но не придумывай медицинскую статистику или факты.\n5. Не ставь диагноз зрителю.\n6. Не запугивай.\n7. Язык должен быть естественным — как говорит врач перед камерой.\n8. Убери канцелярит и общие фразы.\n9. Сохрани соответствие теме и целевой аудитории.\n10. Сценарий должен подходить для короткого Reels.\n\nВерни ТОЛЬКО валидный JSON.\nБез Markdown.\nБез ```json.\nБез текста до или после JSON.\n\nФормат:\n\n{\n  \"Hook\": \"...\",\n  \"Конфликт\": \"...\",\n  \"Сценарий\": \"...\",\n  \"Визуал\": \"...\",\n  \"CTA\": \"...\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -288,
+        128
+      ],
+      "id": "c16d8abc-258c-4aea-8791-20702e94a7bb",
+      "name": "Повторная дороботка",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item, index) => {\n\n  // Получаем текст ответа OpenAI\n  const text =\n    item.json.output?.[0]?.content?.[0]?.text ??\n    item.json.output_text ??\n    item.json.text ??\n    '';\n\n  // Удаляем возможные ```json\n  const cleaned = String(text)\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  let improved;\n\n  try {\n    improved = JSON.parse(cleaned);\n  } catch (error) {\n    throw new Error(\n      `Не удалось разобрать JSON для item ${index + 1}: ${cleaned}`\n    );\n  }\n\n  // Берём исходные данные из Code in JavaScript4\n  const source = $('Code in JavaScript4').all()[index]?.json ?? {};\n\n  return {\n    json: {\n      ...source,\n\n      Hook: improved.Hook ?? source.Hook ?? '',\n      Конфликт: improved.Конфликт ?? source.Конфликт ?? '',\n      Сценарий: improved.Сценарий ?? source.Сценарий ?? '',\n      Визуал: improved.Визуал ?? source.Визуал ?? '',\n      CTA: improved.CTA ?? source.CTA ?? '',\n\n      Попытка: source.Попытка ?? 1,\n      Статус: 'Нужна финальная проверка'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        368
+      ],
+      "id": "d04408a6-eefd-44ff-bd0e-0644183da9d8",
+      "name": "Парсер повторной доработки"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты — строгий независимый редактор Instagram Reels врача-флеболога.\n\nПеред тобой сценарий, который уже был доработан после замечаний предыдущего редактора.\n\nТвоя задача — НЕ переписывать сценарий.\nТолько объективно оценить текущую новую версию.\n\nОцени сценарий по 10 критериям:\n\n1. Сила Hook в первые 2 секунды.\n2. Эмоциональный конфликт.\n3. Понятность для обычного пациента.\n4. Удержание внимания до конца.\n5. Конкретность и отсутствие банальных советов.\n6. Доверие к врачу.\n7. Потенциал сохранений, комментариев и пересылок.\n8. Естественность речи врача.\n9. Медицинская корректность без постановки диагноза зрителю.\n10. Соответствие теме ролика.\n\nОсобенно проверь, действительно ли устранены замечания предыдущего редактора.\n\nТЕМА:\n{{$json.Тема}}\n\nЦЕЛЬ:\n{{$json.Цель}}\n\nАУДИТОРИЯ:\n{{$json.Аудитория}}\n\nHOOK:\n{{$json.Hook}}\n\nКОНФЛИКТ:\n{{$json.Конфликт}}\n\nСЦЕНАРИЙ:\n{{$json.Сценарий}}\n\nВИЗУАЛ:\n{{$json.Визуал}}\n\nCTA:\n{{$json.CTA}}\n\nПРЕДЫДУЩАЯ ОЦЕНКА:\n{{$json.Предыдущая_оценка}}\n\nПРЕДЫДУЩИЕ ПРОБЛЕМЫ:\n{{$json.Замечания_редактора}}\n\nТРЕБОВАЛОСЬ УЛУЧШИТЬ:\n{{$json.Требуемые_улучшения}}\n\nВАЖНО:\nНе повышай оценку только потому, что сценарий был доработан.\nЕсли замечания устранены плохо — оценка может остаться прежней или стать ниже.\n\n9–10 = сильный сценарий, можно публиковать.\n8 = хороший сценарий, можно публиковать.\n6–7 = требуется дополнительная доработка.\n1–5 = слабый сценарий.\n\nВерни ТОЛЬКО валидный JSON.\nБез Markdown.\nБез ```json.\nБез текста до или после JSON.\n\nФормат строго такой:\n\n{\n  \"Оценка\": \"8/10\",\n  \"Проблемы\": \"Кратко перечисли оставшиеся слабые места\",\n  \"Улучшение\": \"Кратко укажи, что ещё можно улучшить\",\n  \"Решение\": \"Принять\"\n}\n\nПравило поля \"Решение\":\nесли оценка 8, 9 или 10 — \"Принять\"\nесли оценка от 1 до 7 — \"На доработку\""
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        -112,
+        368
+      ],
+      "id": "9f3ee0cf-937c-4809-b081-aa11c8ddb4b3",
+      "name": "Финальная проверка 2",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map((item, index) => {\n\n  // Исходный item до финальной проверки\n  const source = $('Парсер повторной доработки').all()[index]?.json ?? {};\n\n  // Ответ модели\n  let raw =\n    item.json.output?.[0]?.content?.[0]?.text ??\n    item.json.output_text ??\n    item.json.text ??\n    '';\n\n  // Убираем возможные ```json\n  raw = String(raw)\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  let review = {};\n\n  try {\n    review = JSON.parse(raw);\n  } catch (e) {\n    review = {\n      Оценка: '',\n      Проблемы: 'Ошибка разбора ответа финальной проверки',\n      Улучшение: raw,\n      Решение: 'На доработку'\n    };\n  }\n\n  // Получаем числовой балл из \"8/10\"\n  const score =\n    Number.parseInt(String(review.Оценка ?? '').match(/\\d+/)?.[0] ?? '0', 10);\n\n  return {\n    json: {\n      ...source,\n\n      // Новая финальная оценка\n      Оценка: review.Оценка ?? '',\n      Балл: score,\n      Проблемы: review.Проблемы ?? '',\n      Улучшение: review.Улучшение ?? '',\n      Решение: review.Решение ?? '',\n\n      // Финальный статус\n      Статус: score >= 8 ? 'Готово' : 'Требует проверки'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        144
+      ],
+      "id": "b5b33444-f031-4494-9477-928ce8319531",
+      "name": "Парсер финальной проверки 2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "82fcfa51-466b-466c-a4c7-43cecd88d74e",
+              "leftValue": "={{ $json.Балл }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        320,
+        112
+      ],
+      "id": "e1746c42-5579-45ef-bb0e-8918ab7afa22",
+      "name": "IF Финальный балл"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0e424a8a-979a-4d27-9ac7-2c478b5a0043",
+              "leftValue": "={{ $json.Попытка }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        544,
+        176
+      ],
+      "id": "7e175f88-5ffb-4672-9648-a12d74aaff2a",
+      "name": "IF Лимит попыток"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты — старший редактор коротких Instagram Reels врача-флеболога.\n\nПеред тобой сценарий, который уже прошёл несколько этапов редакторской проверки, но всё ещё получил оценку ниже 8/10.\n\nЭто ПОСЛЕДНЯЯ автоматическая доработка.\n\nТвоя задача — существенно улучшить сценарий с учётом замечаний редактора.\n\nОсобое внимание:\n\n1. Hook должен цеплять в первые 2 секунды.\n2. Не использовать банальные фразы.\n3. Создать конкретный эмоциональный конфликт.\n4. Говорить простым языком обычного пациента.\n5. Не запугивать зрителя.\n6. Не ставить диагноз зрителю.\n7. Не давать индивидуальных назначений лечения.\n8. Сценарий должен звучать естественно для врача.\n9. Удерживать внимание до конца.\n10. CTA должен естественно стимулировать сохранение, комментарий или пересылку.\n\nТЕМА:\n{{$json.Тема}}\n\nЦЕЛЬ:\n{{$json.Цель}}\n\nАУДИТОРИЯ:\n{{$json.Аудитория}}\n\nТЕКУЩИЙ HOOK:\n{{$json.Hook}}\n\nТЕКУЩИЙ КОНФЛИКТ:\n{{$json.Конфликт}}\n\nТЕКУЩИЙ СЦЕНАРИЙ:\n{{$json.Сценарий}}\n\nТЕКУЩИЙ ВИЗУАЛ:\n{{$json.Визуал}}\n\nТЕКУЩИЙ CTA:\n{{$json.CTA}}\n\nПОСЛЕДНЯЯ ОЦЕНКА:\n{{$json.Оценка}}\n\nПРОБЛЕМЫ, КОТОРЫЕ НАШЁЛ РЕДАКТОР:\n{{$json.Проблемы}}\n\nЧТО РЕДАКТОР ТРЕБУЕТ УЛУЧШИТЬ:\n{{$json.Улучшение}}\n\nПерепиши только те элементы, которые действительно необходимо улучшить.\n\nВерни ТОЛЬКО валидный JSON.\nБез Markdown.\nБез ```json.\nБез текста до и после JSON.\n\nФормат строго такой:\n\n{\n  \"Hook\": \"...\",\n  \"Конфликт\": \"...\",\n  \"Сценарий\": \"...\",\n  \"Визуал\": \"...\",\n  \"CTA\": \"...\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        416
+      ],
+      "id": "780071ac-eda0-496d-8f64-3fa0c90c980a",
+      "name": "Последняя доработка",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst sourceItems = $('IF Лимит попыток').all();\n\nreturn items.map((item, index) => {\n\n  const source = sourceItems[index]?.json ?? {};\n\n  let raw =\n    item.json.output?.[0]?.content?.[0]?.text ??\n    item.json.output_text ??\n    item.json.text ??\n    '';\n\n  raw = String(raw)\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  let improved = {};\n\n  try {\n    improved = JSON.parse(raw);\n  } catch (e) {\n    improved = {};\n  }\n\n  return {\n    json: {\n      ...source,\n\n      Hook: improved.Hook ?? source.Hook ?? '',\n      Конфликт: improved.Конфликт ?? source.Конфликт ?? '',\n      Сценарий: improved.Сценарий ?? source.Сценарий ?? '',\n      Визуал: improved.Визуал ?? source.Визуал ?? '',\n      CTA: improved.CTA ?? source.CTA ?? '',\n\n      Предыдущая_оценка: source.Оценка ?? '',\n      Предыдущий_балл: source.Балл ?? 0,\n\n      Попытка: 2,\n      Статус: 'Последняя проверка'\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        416
+      ],
+      "id": "446d5d4b-4805-4c8d-b2db-a3392ce25be3",
+      "name": "Парсер последней доработки"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты — строгий финальный редактор Instagram Reels врача-флеболога.\n\nПеред тобой сценарий после ПОСЛЕДНЕЙ автоматической доработки.\n\nТвоя задача — не переписывать сценарий, а независимо оценить его качество и решить:\nможно ли публиковать сценарий или он требует ручной проверки.\n\nДАННЫЕ:\n\nТема:\n{{ $json.Тема }}\n\nЦель:\n{{ $json.Цель }}\n\nАудитория:\n{{ $json.Аудитория }}\n\nHOOK:\n{{ $json.Hook }}\n\nКОНФЛИКТ:\n{{ $json.Конфликт }}\n\nСЦЕНАРИЙ:\n{{ $json.Сценарий }}\n\nВИЗУАЛ:\n{{ $json.Визуал }}\n\nCTA:\n{{ $json.CTA }}\n\n\nОЦЕНИ 5 КРИТЕРИЕВ ОТ 0 ДО 10.\n\n1. Hook_балл\n\n8–10:\n- вызывает сильное любопытство;\n- конкретный;\n- понятен за первые 1–2 секунды;\n- хочется продолжить просмотр;\n- не использует ложное запугивание.\n\n5–7:\n- понятный, но шаблонный;\n- слабое любопытство;\n- можно легко пролистать.\n\n0–4:\n- банальный;\n- длинный;\n- непонятный;\n- кликбейт без содержания.\n\n\n2. Конфликт_балл\n\n8–10:\n- есть конкретная проблема или заблуждение;\n- зритель узнаёт себя;\n- возникает желание узнать объяснение.\n\n5–7:\n- проблема есть, но раскрыта поверхностно.\n\n0–4:\n- конфликт практически отсутствует.\n\n\n3. Сценарий_балл\n\n8–10:\n- естественная разговорная речь врача;\n- логичное развитие;\n- конкретная польза;\n- нет воды и повторов;\n- подходит для короткого Reels.\n\n5–7:\n- полезно, но слишком общо или затянуто.\n\n0–4:\n- слабая структура;\n- много воды;\n- непонятная мысль.\n\n\n4. Медицина_балл\n\nЭто критический критерий.\n\n8–10:\n- медицинские формулировки осторожные и корректные;\n- симптомы не выдаются за диагноз;\n- отсутствует необоснованное запугивание;\n- нет обещаний результата;\n- при тревожных симптомах корректно предлагается медицинская оценка.\n\n5–7:\n- есть спорные, чрезмерно категоричные или недостаточно точные медицинские формулировки.\n\n0–4:\n- потенциально опасная медицинская рекомендация;\n- симптом напрямую объявляется диагнозом;\n- необоснованное запугивание;\n- сомнительные рекомендации по лечению или профилактике.\n\nВАЖНО:\nНе повышай оценку за драматичность.\nФразы вроде «это может быть опасной болезнью» должны иметь достаточное медицинское основание.\nНе придумывай диагноз по одному симптому.\n\n\n5. Визуал_CTA_балл\n\n8–10:\n- визуал реально можно снять;\n- визуал усиливает смысл;\n- CTA соответствует цели ролика;\n- CTA конкретный.\n\n5–7:\n- рабочий, но шаблонный.\n\n0–4:\n- визуал не связан со сценарием;\n- CTA отсутствует или не соответствует цели.\n\n\nПРАВИЛО ФИНАЛЬНОГО РЕШЕНИЯ:\n\nСтатус = \"Готово\" ТОЛЬКО если одновременно:\n\nHook_балл >= 8\nКонфликт_балл >= 8\nСценарий_балл >= 8\nМедицина_балл >= 8\nВизуал_CTA_балл >= 8\n\nИ нет существенной медицинской ошибки.\n\nВо всех остальных случаях:\n\nСтатус = \"Требует ручной проверки\"\n\n\nРАССЧИТАЙ:\n\nБалл = среднее арифметическое пяти оценок, округлённое до одного знака после запятой.\n\nОценка = Балл + \"/10\"\n\n\nРЕШЕНИЕ:\n\nЕсли Статус = \"Готово\":\nРешение = \"Принять\"\n\nЕсли Статус = \"Требует ручной проверки\":\nРешение = \"Ручная проверка\"\n\n\nВерни ТОЛЬКО валидный JSON.\n\nНикакого Markdown.\nНикаких ```json.\nНикакого текста до или после JSON.\n\nФОРМАТ:\n\n{\n  \"Hook_балл\": 0,\n  \"Конфликт_балл\": 0,\n  \"Сценарий_балл\": 0,\n  \"Медицина_балл\": 0,\n  \"Визуал_CTA_балл\": 0,\n  \"Балл\": 0,\n  \"Оценка\": \"0/10\",\n  \"Статус\": \"Требует ручной проверки\",\n  \"Проблемы\": \"\",\n  \"Улучшение\": \"\",\n  \"Решение\": \"Ручная проверка\"\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        416
+      ],
+      "id": "cef54974-4739-4f74-b7b1-5bb8bd94e812",
+      "name": "Контроль после попытки 2",
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst sourceItems = $('Парсер последней доработки').all();\n\nfunction toNumber(value) {\n  if (value === null || value === undefined || value === '') {\n    return 0;\n  }\n\n  if (typeof value === 'number') {\n    return Number.isFinite(value) ? value : 0;\n  }\n\n  const normalized = String(value)\n    .replace(',', '.')\n    .trim();\n\n  const match = normalized.match(/\\d+(?:\\.\\d+)?/);\n\n  if (!match) {\n    return 0;\n  }\n\n  const num = Number(match[0]);\n\n  return Number.isFinite(num) ? num : 0;\n}\n\nreturn items.map((item, index) => {\n  const source = sourceItems[index]?.json ?? {};\n\n  let raw =\n    item.json.output?.[0]?.content?.[0]?.text ??\n    item.json.output_text ??\n    item.json.text ??\n    '';\n\n  raw = String(raw)\n    .replace(/```json/gi, '')\n    .replace(/```/g, '')\n    .trim();\n\n  let review = {};\n\n  try {\n    review = JSON.parse(raw);\n  } catch (error) {\n    review = {\n      Hook_балл: 0,\n      Конфликт_балл: 0,\n      Сценарий_балл: 0,\n      Медицина_балл: 0,\n      Визуал_CTA_балл: 0,\n      Балл: 0,\n      Оценка: '0/10',\n      Проблемы: 'Ошибка разбора финальной оценки',\n      Улучшение: '',\n      Решение: 'Ручная проверка',\n      Статус: 'Требует ручной проверки'\n    };\n  }\n\n  const hookScore = toNumber(review.Hook_балл);\n  const conflictScore = toNumber(review.Конфликт_балл);\n  const scriptScore = toNumber(review.Сценарий_балл);\n  const medicineScore = toNumber(review.Медицина_балл);\n  const visualCtaScore = toNumber(review.Визуал_CTA_балл);\n\n  let score = toNumber(review.Балл);\n\n  if (score === 0) {\n    score = toNumber(review.Оценка);\n  }\n\n  const hasAllCriteria =\n    hookScore > 0 &&\n    conflictScore > 0 &&\n    scriptScore > 0 &&\n    medicineScore > 0 &&\n    visualCtaScore > 0;\n\n  const criteriaPassed =\n    hasAllCriteria &&\n    hookScore >= 8 &&\n    conflictScore >= 8 &&\n    scriptScore >= 8 &&\n    medicineScore >= 8 &&\n    visualCtaScore >= 8;\n\n  const finalStatus =\n    criteriaPassed\n      ? 'Готово'\n      : 'Требует ручной проверки';\n\n  const finalDecision =\n    criteriaPassed\n      ? 'Принять'\n      : 'Ручная проверка';\n\n  return {\n    json: {\n      ...source,\n\n      Hook_балл: hookScore,\n      Конфликт_балл: conflictScore,\n      Сценарий_балл: scriptScore,\n      Медицина_балл: medicineScore,\n      Визуал_CTA_балл: visualCtaScore,\n\n      Оценка:\n        review.Оценка ??\n        `${score}/10`,\n\n      Балл: score,\n\n      Проблемы:\n        review.Проблемы ?? '',\n\n      Улучшение:\n        review.Улучшение ?? '',\n\n      Решение:\n        review.Решение ??\n        finalDecision,\n\n      Статус:\n        review.Статус === 'Готово' && criteriaPassed\n          ? 'Готово'\n          : finalStatus\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        976,
+        416
+      ],
+      "id": "7d5ed845-bc1a-4a08-ad3f-f69f513a8c95",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "22d50028-5302-46cb-9e61-b404bab6e601",
+              "leftValue": "={{ $json.Балл }}",
+              "rightValue": 8,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1120,
+        176
+      ],
+      "id": "393c8405-9865-4723-b8a0-6ba1c385d2f0",
+      "name": "IF После попытки 2"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1264,
+        -64
+      ],
+      "id": "98bb6ffc-6c9c-4252-a5f9-3a2d5b7bd850",
+      "name": "Merge Готовые"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => ({\n  json: {\n    ...item.json,\n    Статус: 'Требует ручной проверки'\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        192
+      ],
+      "id": "e136d4b1-5b35-41ff-b8c5-45c59d886335",
+      "name": "Ручная проверка"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1696,
+        -144
+      ],
+      "id": "36a7ca3d-da1f-4834-8b6b-dbbd4b85eca6",
+      "name": "Merge Все результаты"
+    },
+    {
+      "parameters": {
+        "chatId": "388686197",
+        "text": "={{$json[\"Заголовок Telegram\"]}}\n\n📌 Тема:\n{{$json[\"Тема\"] || \"—\"}}\n\n🎯 Цель:\n{{$json[\"Цель\"] || \"—\"}}\n\n👥 Аудитория:\n{{$json[\"Аудитория\"] || \"—\"}}\n\n🔥 HOOK:\n{{$json[\"Hook\"] || \"—\"}}\n\n⚡ КОНФЛИКТ:\n{{$json[\"Конфликт\"] || \"—\"}}\n\n🎥 СЦЕНАРИЙ:\n{{$json[\"Сценарий\"] || \"—\"}}\n\n👁 ВИЗУАЛ:\n{{$json[\"Визуал\"] || \"—\"}}\n\n📣 CTA:\n{{$json[\"CTA\"] || \"—\"}}\n\n📊 ОЦЕНКА КАЧЕСТВА\n\n⭐ Общая оценка: {{$json[\"Оценка\"] || \"—\"}}\n\n🔥 Hook: {{$json[\"Hook_балл\"] ?? \"—\"}}/10\n⚡ Конфликт: {{$json[\"Конфликт_балл\"] ?? \"—\"}}/10\n🎥 Сценарий: {{$json[\"Сценарий_балл\"] ?? \"—\"}}/10\n🩺 Медицина: {{$json[\"Медицина_балл\"] ?? \"—\"}}/10\n👁 Визуал / CTA: {{$json[\"Визуал_CTA_балл\"] ?? \"—\"}}/10\n\n{{$json[\"Статус\"] === \"Готово\"\n? \"✅ Статус: Готово\"\n: \"⚠️ Статус: Требует ручной проверки\"\n}}\n\n📝 ПРОБЛЕМЫ:\n{{$json[\"Проблемы\"] || \"Нет замечаний\"}}\n\n💡 УЛУЧШЕНИЕ:\n{{$json[\"Улучшение\"] || \"Дополнительные улучшения не требуются\"}}\n\n🤖 РЕШЕНИЕ:\n{{$json[\"Решение\"] || \"—\"}}\n\n🔄 Попытка: {{$json[\"Попытка\"] ?? \"—\"}}\n\n📄 Строка Google Sheets: {{$json[\"row_number\"] || \"—\"}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1936,
+        112
+      ],
+      "id": "eb460621-297c-4a32-a6a0-ba3226727f45",
+      "name": "Send a text message",
+      "webhookId": "e96feeab-8afc-4d49-b058-3aba29b5c085",
+      "credentials": {
+        "telegramApi": {
+          "id": "G08SxvEXu0ydV6sv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Результат после обновления Google Sheets\nconst updatedRaw = $input.first().json;\n\n// Убирает пробелы из названий полей\nfunction normalize(object = {}) {\n  return Object.fromEntries(\n    Object.entries(object).map(([key, value]) => [\n      String(key).trim(),\n      value\n    ])\n  );\n}\n\n// Находит нужную строку по row_number или ID\nfunction findCurrentItem(items, current) {\n  if (!Array.isArray(items) || items.length === 0) {\n    return {};\n  }\n\n  const currentRow = String(\n    current.row_number ?? \"\"\n  );\n\n  const currentId = String(\n    current.ID ?? current.Id ?? current.id ?? \"\"\n  );\n\n  const found = items.find(({ json }) => {\n    const data = normalize(json);\n\n    const sameRow =\n      currentRow &&\n      String(data.row_number ?? \"\") === currentRow;\n\n    const itemId = String(\n      data.ID ?? data.Id ?? data.id ?? \"\"\n    );\n\n    const sameId =\n      currentId &&\n      itemId === currentId;\n\n    return sameRow || sameId;\n  });\n\n  return found?.json ?? items[0]?.json ?? {};\n}\n\n// Исходные данные Google Sheets\nlet originalRaw = {};\n\ntry {\n  originalRaw = findCurrentItem(\n    $(\"Get row(s) in sheet\").all(),\n    updatedRaw\n  );\n} catch (error) {\n  originalRaw = {};\n}\n\n// Данные перед обновлением строки\nlet mergedRaw = {};\n\ntry {\n  mergedRaw = findCurrentItem(\n    $(\"Merge Все результаты\").all(),\n    updatedRaw\n  );\n} catch (error) {\n  mergedRaw = {};\n}\n\n// Собираем все данные в один объект\nconst item = {\n  ...normalize(originalRaw),\n  ...normalize(mergedRaw),\n  ...normalize(updatedRaw)\n};\n\n// Возвращает первое непустое значение\nfunction firstValue(...values) {\n  return values.find(\n    value =>\n      value !== undefined &&\n      value !== null &&\n      String(value).trim() !== \"\"\n  );\n}\n\n// Нормализуем названия отдельных оценок\nitem[\"Hook_балл\"] = firstValue(\n  item[\"Hook_балл\"],\n  item[\"Hook балл\"],\n  item[\"Оценка Hook\"],\n  item[\"hook_score\"]\n);\n\nitem[\"Конфликт_балл\"] = firstValue(\n  item[\"Конфликт_балл\"],\n  item[\"Конфликт балл\"],\n  item[\"Оценка Конфликт\"],\n  item[\"conflict_score\"]\n);\n\nitem[\"Сценарий_балл\"] = firstValue(\n  item[\"Сценарий_балл\"],\n  item[\"Сценарий балл\"],\n  item[\"Оценка Сценарий\"],\n  item[\"script_score\"]\n);\n\nitem[\"Медицина_балл\"] = firstValue(\n  item[\"Медицина_балл\"],\n  item[\"Медицина балл\"],\n  item[\"Оценка Медицина\"],\n  item[\"medicine_score\"]\n);\n\nitem[\"Визуал_CTA_балл\"] = firstValue(\n  item[\"Визуал_CTA_балл\"],\n  item[\"Визуал CTA балл\"],\n  item[\"Оценка Визуал CTA\"],\n  item[\"visual_cta_score\"]\n);\n\n// Преобразуем \"8.4/10\" в 8.4\nconst scoreText = String(\n  firstValue(\n    item[\"Общая оценка\"],\n    item[\"Общая_оценка\"],\n    item[\"Оценка\"],\n    \"0\"\n  )\n);\n\nconst score =\n  parseFloat(scoreText.replace(\",\", \".\")) || 0;\n\nconst originalDecision = String(\n  item[\"Решение\"] ?? \"\"\n).trim();\n\nconst accepted =\n  score >= 8 &&\n  originalDecision.toLowerCase() === \"принять\";\n\nitem[\"Статус\"] = accepted\n  ? \"Готово\"\n  : \"Требует ручной проверки\";\n\nitem[\"Решение\"] = accepted\n  ? \"Принять\"\n  : \"Ручная проверка\";\n\nitem[\"Заголовок Telegram\"] = accepted\n  ? \"✅ СЦЕНАРИЙ REELS ГОТОВ\"\n  : \"⚠️ СЦЕНАРИЙ ТРЕБУЕТ РУЧНОЙ ПРОВЕРКИ\";\n\nitem[\"Оценка числом\"] = score;\n\nreturn [\n  {\n    json: item\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        320
+      ],
+      "id": "fc39c671-a2a1-4dc5-b016-40c2cfc94557",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "10000000-0000-4000-8000-000000000001-condition",
+              "leftValue": "={{ $json.Статус === 'Готово' && $json.Решение === 'Принять' ? 'yes' : 'no' }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-4000-8000-000000000001",
+      "name": "IF Готов к монтажу",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2016,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "388686197",
+        "text": "={{ '🎞 СЦЕНАРИЙ ГОТОВ К МОНТАЖУ\\n\\nID: ' + ($json.ID || $json.row_number) + '\\nТема: ' + ($json.Тема || '—') + '\\n\\nОтправьте исходное видео до 20 МБ в этот чат. В подписи укажите: ' + ($json.ID || $json.row_number) }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000002",
+      "name": "Запросить исходное видео",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2240,
+        320
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "G08SxvEXu0ydV6sv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {
+          "chatIds": "388686197"
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000003",
+      "name": "Telegram — исходное видео",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -432,
+        704
+      ],
+      "webhookId": "10000000-0000-4000-8000-000000000103",
+      "credentials": {
+        "telegramApi": {
+          "id": "G08SxvEXu0ydV6sv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const source = $input.first();\nconst message = source.json.message ?? {};\nconst document = message.document ?? null;\nconst video = message.video ?? null;\n\nconst documentIsVideo = Boolean(\n  document &&\n  String(document.mime_type ?? '').toLowerCase().startsWith('video/')\n);\n\nconst media = video ?? (documentIsVideo ? document : null);\nconst caption = String(message.caption ?? message.text ?? '').trim();\nconst idMatch = caption.match(/(?:reels?\\s*)?#?(\\d+)/i) ?? caption.match(/\\d+/);\nconst rowId = idMatch?.[1] ?? idMatch?.[0] ?? '';\nconst fileSize = Number(media?.file_size ?? 0);\nconst maxSize = 20 * 1024 * 1024;\n\nlet errorMessage = '';\n\nif (!media) {\n  errorMessage = '⚠️ Отправьте исходное видео как видео или файл. В подписи укажите ID строки, например: 43';\n} else if (!rowId) {\n  errorMessage = '⚠️ Не найден ID сценария. Отправьте видео с подписью: 43 или reels 43';\n} else if (fileSize > maxSize) {\n  const sizeMb = (fileSize / 1024 / 1024).toFixed(1);\n  errorMessage = `⚠️ Видео весит ${sizeMb} МБ. Telegram-бот может скачать не больше 20 МБ. Сожмите видео и отправьте снова.`;\n}\n\nreturn [{\n  json: {\n    ...source.json,\n    valid_text: errorMessage ? 'no' : 'yes',\n    error_message: errorMessage,\n    chat_id: message.chat?.id ?? '',\n    row_id: String(rowId),\n    file_id: media?.file_id ?? '',\n    file_size: fileSize,\n    source_file_name: media?.file_name ?? `source_${rowId || 'video'}.mp4`\n  }\n}];"
+      },
+      "id": "10000000-0000-4000-8000-000000000004",
+      "name": "Разобрать видео",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -208,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "10000000-0000-4000-8000-000000000005-condition",
+              "leftValue": "={{ $json.valid_text }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-4000-8000-000000000005",
+      "name": "IF Входное видео корректно",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        16,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id || 388686197 }}",
+        "text": "={{ $json.error_message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000006",
+      "name": "Подсказка по загрузке",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        832
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "G08SxvEXu0ydV6sv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "fileId": "={{ $json.file_id }}",
+        "binaryProperty": "data",
+        "download": true,
+        "additionalFields": {
+          "mimeType": "video/mp4"
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000007",
+      "name": "Скачать видео",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        624
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "G08SxvEXu0ydV6sv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k",
+          "mode": "list",
+          "cachedResultName": "Agent AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Лист1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1B0sPu3k0_GtppJ_jOTleo9GGBxu9GLF4HHFo7dq750k/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "    ID",
+              "lookupValue": "={{ $('Разобрать видео').first().json.row_id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000008",
+      "name": "Найти готовый сценарий",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        464,
+        624
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "LbzmUAKUqfYXplhO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function normalize(object = {}) {\n  return Object.fromEntries(\n    Object.entries(object).map(([key, value]) => [String(key).trim(), value])\n  );\n}\n\nconst row = normalize($input.first().json);\nconst meta = $('Разобрать видео').first().json;\nconst downloaded = $('Скачать видео').first();\n\nconst id = String(row.ID ?? '');\nconst status = String(row.Статус ?? '').trim();\nconst decision = String(row.Решение ?? '').trim();\nconst found = Boolean(id) && id === String(meta.row_id);\nconst ready = found && status === 'Готово' && decision === 'Принять';\n\nlet errorMessage = '';\nif (!found) {\n  errorMessage = `⚠️ Сценарий с ID ${meta.row_id} не найден в Google Sheets.`;\n} else if (!ready) {\n  errorMessage = `⚠️ Сценарий ID ${meta.row_id} пока нельзя монтировать. Статус: ${status || '—'}. Решение: ${decision || '—'}.`;\n}\n\nreturn [{\n  json: {\n    ...row,\n    ...meta,\n    ready_text: ready ? 'yes' : 'no',\n    error_message: errorMessage,\n    ID: id || meta.row_id\n  },\n  binary: downloaded.binary\n}];"
+      },
+      "id": "10000000-0000-4000-8000-000000000009",
+      "name": "Подготовить сценарий и видео",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "10000000-0000-4000-8000-000000000010-condition",
+              "leftValue": "={{ $json.ready_text }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "10000000-0000-4000-8000-000000000010",
+      "name": "IF Сценарий можно монтировать",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        624
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id || 388686197 }}",
+        "text": "={{ $json.error_message }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000011",
+      "name": "Ошибка готовности сценария",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        800
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "G08SxvEXu0ydV6sv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://reels-video-editor.onrender.com/analyze",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "video",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000012",
+      "name": "Анализ видео",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1136,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $('Подготовить сценарий и видео').first();\n\nreturn [{\n  json: {\n    ...prepared.json,\n    analysis: $input.first().json\n  },\n  binary: prepared.binary\n}];"
+      },
+      "id": "10000000-0000-4000-8000-000000000013",
+      "name": "Для транскрипции",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://reels-video-editor.onrender.com/extract-audio",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "video",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000,
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000021",
+      "name": "Извлечь аудио",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1584,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "inputDataFieldName": "data",
+        "options": {
+          "language": "ru"
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000014",
+      "name": "Транскрибировать речь",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $('Для транскрипции').first().json;\nconst current = $input.first().json;\n\nlet transcript =\n  current.text ??\n  current.transcription ??\n  current.output_text ??\n  current.output ??\n  '';\n\nif (typeof transcript !== 'string') {\n  transcript = JSON.stringify(transcript);\n}\n\nreturn [{\n  json: {\n    ...prepared,\n    transcript: String(transcript).trim()\n  }\n}];"
+      },
+      "id": "10000000-0000-4000-8000-000000000015",
+      "name": "Собрать данные монтажа",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Ты профессиональный монтажёр разговорных Reels врача-флеболога.\n\nСоздай только команды ZOOM и SUBTITLE для исходного видео. CUT не создавай: безопасные удаления тишины добавляются автоматически.\n\nID сценария: {{$json.ID}}\nДлительность: {{$json.analysis.duration}} секунд\nРечевые интервалы исходного видео:\n{{ JSON.stringify($json.analysis.speech_segments) }}\n\nТранскрипция фактической речи:\n{{$json.transcript}}\n\nПроверенный сценарий:\nHOOK: {{$json.Hook}}\nКОНФЛИКТ: {{$json.Конфликт}}\nСЦЕНАРИЙ: {{$json.Сценарий}}\nCTA: {{$json.CTA}}\n\nПравила:\n1. Тайминги указывай относительно ИСХОДНОГО видео.\n2. SUBTITLE должен повторять фактическую речь из транскрипции, ничего медицинского не выдумывай.\n3. Одна субтитровая фраза — примерно 3–7 слов, продолжительность 1–4 секунды.\n4. highlight — одно важное слово, которое уже есть в text.\n5. ZOOM ставь примерно раз в 5–8 секунд, длительность 0.8–1.5 секунды, scale от 1.07 до 1.15.\n6. Не создавай команды за пределами длительности видео.\n7. Не добавляй музыку, диагнозы, обещания лечения или новый текст.\n\nВерни только валидный JSON без Markdown:\n{\n  \"actions\": [\n    {\"action\":\"ZOOM\",\"start\":0.5,\"end\":1.5,\"scale\":1.1},\n    {\"action\":\"SUBTITLE\",\"start\":0.2,\"end\":2.5,\"text\":\"точная фраза из речи\",\"highlight\":\"фраза\"}\n  ],\n  \"notes\":\"краткое примечание\"\n}\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "10000000-0000-4000-8000-000000000016",
+      "name": "Создать монтажные команды",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        2256,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "openAiApi": {
+          "id": "Epr2IaN2yuCmizR0",
+          "name": "OpenAI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const model = $input.first().json;\nconst source = $('Собрать данные монтажа').first().json;\nconst downloaded = $('Скачать видео').first();\nconst analysis = source.analysis ?? {};\nconst duration = Number(analysis.duration ?? 0);\n\nlet raw =\n  model.output?.[0]?.content?.[0]?.text ??\n  model.output_text ??\n  model.text ??\n  '';\n\nraw = String(raw)\n  .replace(/```json/gi, '')\n  .replace(/```/g, '')\n  .trim();\n\nlet parsed = {};\ntry {\n  parsed = JSON.parse(raw);\n} catch (error) {\n  parsed = {};\n}\n\nconst requested = Array.isArray(parsed)\n  ? parsed\n  : (Array.isArray(parsed.actions) ? parsed.actions : []);\n\nfunction number(value, fallback = 0) {\n  const result = Number(value);\n  return Number.isFinite(result) ? result : fallback;\n}\n\nfunction clamp(value, min, max) {\n  return Math.max(min, Math.min(max, value));\n}\n\nconst actions = [];\n\nfor (const cut of (analysis.suggested_cuts ?? [])) {\n  const start = clamp(number(cut.start), 0, duration);\n  const end = clamp(number(cut.end), 0, duration);\n  if (end > start) {\n    actions.push({ action: 'CUT', start, end });\n  }\n}\n\nfor (const action of requested) {\n  const type = String(action.action ?? '').toUpperCase().trim();\n  if (!['ZOOM', 'TEXT', 'SUBTITLE'].includes(type)) continue;\n\n  const start = clamp(number(action.start), 0, duration);\n  const end = clamp(number(action.end), 0, duration);\n  if (end <= start) continue;\n\n  if (type === 'ZOOM') {\n    actions.push({\n      action: 'ZOOM',\n      start,\n      end: Math.min(end, start + 3),\n      scale: clamp(number(action.scale, 1.1), 1.01, 1.25)\n    });\n    continue;\n  }\n\n  const text = String(action.text ?? '').trim().slice(0, 120);\n  if (!text) continue;\n\n  actions.push({\n    action: 'SUBTITLE',\n    start,\n    end: Math.min(end, start + 6),\n    text,\n    highlight: String(action.highlight ?? '').trim().slice(0, 40)\n  });\n}\n\nfunction speechOffsetToTime(offset, segments) {\n  let remaining = Math.max(0, offset);\n  for (const segment of segments) {\n    const start = number(segment.start);\n    const end = number(segment.end);\n    const length = Math.max(0, end - start);\n    if (remaining <= length) return start + remaining;\n    remaining -= length;\n  }\n  return duration;\n}\n\nconst hasSubtitles = actions.some(action => action.action === 'SUBTITLE');\n\nif (!hasSubtitles && source.transcript) {\n  const words = String(source.transcript).split(/\\s+/).filter(Boolean);\n  const chunks = [];\n  for (let index = 0; index < words.length; index += 6) {\n    chunks.push(words.slice(index, index + 6));\n  }\n\n  const segments = (analysis.speech_segments ?? []).length\n    ? analysis.speech_segments\n    : [{ start: 0, end: duration }];\n  const speechDuration = segments.reduce(\n    (sum, segment) => sum + Math.max(0, number(segment.end) - number(segment.start)),\n    0\n  );\n\n  chunks.forEach((chunk, index) => {\n    const startOffset = speechDuration * index / Math.max(1, chunks.length);\n    const endOffset = speechDuration * (index + 1) / Math.max(1, chunks.length);\n    const start = speechOffsetToTime(startOffset, segments);\n    const end = speechOffsetToTime(endOffset, segments);\n    if (end > start) {\n      actions.push({\n        action: 'SUBTITLE',\n        start,\n        end,\n        text: chunk.join(' '),\n        highlight: chunk.length > 1 ? chunk[1] : chunk[0]\n      });\n    }\n  });\n}\n\nif (!actions.some(action => action.action === 'ZOOM') && duration > 1) {\n  for (let start = 0.5; start < duration; start += 7) {\n    actions.push({\n      action: 'ZOOM',\n      start,\n      end: Math.min(duration, start + 1.1),\n      scale: 1.1\n    });\n  }\n}\n\nreturn [{\n  json: {\n    ...source,\n    actions,\n    actions_json: JSON.stringify(actions),\n    montage_notes: parsed.notes ?? ''\n  },\n  binary: downloaded.binary\n}];"
+      },
+      "id": "10000000-0000-4000-8000-000000000017",
+      "name": "Парсер монтажных команд",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://reels-video-editor.onrender.com/edit",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "video",
+              "inputDataFieldName": "data"
+            },
+            {
+              "parameterType": "formData",
+              "name": "actions",
+              "value": "={{ $json.actions_json }}"
+            },
+            {
+              "parameterType": "formData",
+              "name": "output_name",
+              "value": "={{ 'reel_' + $json.row_id + '.mp4' }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000,
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000018",
+      "name": "Смонтировать Reels",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2704,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "operation": "sendVideo",
+        "chatId": "={{ $('Разобрать видео').first().json.chat_id }}",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "additionalFields": {
+          "caption": "={{ '✅ ГОТОВЫЙ REELS\\n\\nID: ' + $('Разобрать видео').first().json.row_id + '\\nСценарий и монтаж объединены.' }}",
+          "appendAttribution": false
+        }
+      },
+      "id": "10000000-0000-4000-8000-000000000019",
+      "name": "Отправить готовый Reels",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2928,
+        544
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "G08SxvEXu0ydV6sv",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Единый Reels AI\\n\\n1. Сценарий создаётся и проверяется существующей веткой.\\n2. Когда статус `Готово`, бот просит исходное видео.\\n3. Отправьте видео до 20 МБ с подписью `43` или `reels 43`.\\n4. Ветка ниже найдёт сценарий, проанализирует и смонтирует видео.\\n\\nПеред активацией отключите другой Telegram Trigger, использующий этого же бота.",
+        "height": 360,
+        "width": 440,
+        "color": 5
+      },
+      "id": "10000000-0000-4000-8000-000000000020",
+      "name": "Инструкция единого агента",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -912,
+        544
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge Все результаты",
+            "type": "main",
+            "index": 2
+          }
+        ],
+        [
+          {
+            "node": "Message a model2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Message a model3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Megre Final",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Megre Final",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Повторная дороботка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Megre Final": {
+      "main": [
+        []
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Повторная дороботка": {
+      "main": [
+        [
+          {
+            "node": "Парсер повторной доработки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсер повторной доработки": {
+      "main": [
+        [
+          {
+            "node": "Финальная проверка 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Финальная проверка 2": {
+      "main": [
+        [
+          {
+            "node": "Парсер финальной проверки 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсер финальной проверки 2": {
+      "main": [
+        [
+          {
+            "node": "IF Финальный балл",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Финальный балл": {
+      "main": [
+        [
+          {
+            "node": "Merge Готовые",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF Лимит попыток",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Лимит попыток": {
+      "main": [
+        [
+          {
+            "node": "Последняя доработка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Последняя доработка": {
+      "main": [
+        [
+          {
+            "node": "Парсер последней доработки",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсер последней доработки": {
+      "main": [
+        [
+          {
+            "node": "Контроль после попытки 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Контроль после попытки 2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "IF После попытки 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF После попытки 2": {
+      "main": [
+        [
+          {
+            "node": "Merge Готовые",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Ручная проверка",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Готовые": {
+      "main": [
+        [
+          {
+            "node": "Merge Все результаты",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Все результаты": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ручная проверка": {
+      "main": [
+        [
+          {
+            "node": "Merge Все результаты",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Готов к монтажу",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Готов к монтажу": {
+      "main": [
+        [
+          {
+            "node": "Запросить исходное видео",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — исходное видео": {
+      "main": [
+        [
+          {
+            "node": "Разобрать видео",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Разобрать видео": {
+      "main": [
+        [
+          {
+            "node": "IF Входное видео корректно",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Входное видео корректно": {
+      "main": [
+        [
+          {
+            "node": "Скачать видео",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Подсказка по загрузке",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Скачать видео": {
+      "main": [
+        [
+          {
+            "node": "Найти готовый сценарий",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Найти готовый сценарий": {
+      "main": [
+        [
+          {
+            "node": "Подготовить сценарий и видео",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Подготовить сценарий и видео": {
+      "main": [
+        [
+          {
+            "node": "IF Сценарий можно монтировать",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Сценарий можно монтировать": {
+      "main": [
+        [
+          {
+            "node": "Анализ видео",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ошибка готовности сценария",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Анализ видео": {
+      "main": [
+        [
+          {
+            "node": "Для транскрипции",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Для транскрипции": {
+      "main": [
+        [
+          {
+            "node": "Извлечь аудио",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Извлечь аудио": {
+      "main": [
+        [
+          {
+            "node": "Транскрибировать речь",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Транскрибировать речь": {
+      "main": [
+        [
+          {
+            "node": "Собрать данные монтажа",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Собрать данные монтажа": {
+      "main": [
+        [
+          {
+            "node": "Создать монтажные команды",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Создать монтажные команды": {
+      "main": [
+        [
+          {
+            "node": "Парсер монтажных команд",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Парсер монтажных команд": {
+      "main": [
+        [
+          {
+            "node": "Смонтировать Reels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Смонтировать Reels": {
+      "main": [
+        [
+          {
+            "node": "Отправить готовый Reels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8a87a2ce9cbbd21ec5274575a59fcf42ab44467777e7fc00700030efb3e1dbc3"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

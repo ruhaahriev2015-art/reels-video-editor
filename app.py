@@ -3,13 +3,80 @@ import re
 import json
 import uuid
 import subprocess
+import hmac
 
 from flask import Flask, request, jsonify, send_file
+from werkzeug.exceptions import RequestEntityTooLarge
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
+MAX_UPLOAD_MB = int(
+    os.environ.get(
+        "MAX_UPLOAD_MB",
+        "250"
+    )
+)
+
+app.config["MAX_CONTENT_LENGTH"] = (
+    MAX_UPLOAD_MB * 1024 * 1024
+)
+
 WORK_DIR = "/tmp/reels_editor"
 os.makedirs(WORK_DIR, exist_ok=True)
+
+SERVICE_VERSION = "2.0.0"
+SUPPORTED_ACTIONS = {
+    "CUT",
+    "TEXT",
+    "SUBTITLE",
+    "ZOOM"
+}
+
+
+def remove_file(path):
+    if not path or not os.path.exists(path):
+        return
+
+    try:
+        os.remove(path)
+    except OSError:
+        pass
+
+
+def check_api_key():
+    expected = os.environ.get(
+        "VIDEO_EDITOR_API_KEY",
+        ""
+    ).strip()
+
+    # Backwards compatible for local development. On Render, set
+    # VIDEO_EDITOR_API_KEY to require X-API-Key on editing requests.
+    if not expected:
+        return None
+
+    provided = request.headers.get(
+        "X-API-Key",
+        ""
+    ).strip()
+
+    if hmac.compare_digest(
+        expected,
+        provided
+    ):
+        return None
+
+    return jsonify({
+        "error": "Unauthorized"
+    }), 401
+
+
+@app.errorhandler(RequestEntityTooLarge)
+def handle_file_too_large(_error):
+    return jsonify({
+        "error": "Video file is too large",
+        "max_upload_mb": MAX_UPLOAD_MB
+    }), 413
 
 
 # =========================================================
@@ -20,14 +87,40 @@ os.makedirs(WORK_DIR, exist_ok=True)
 def home():
     return jsonify({
         "status": "ok",
-        "service": "reels-video-editor"
+        "service": "reels-video-editor",
+        "version": SERVICE_VERSION
     })
 
 
 @app.route("/health", methods=["GET"])
 def health():
     return jsonify({
-        "status": "ok"
+        "status": "ok",
+        "version": SERVICE_VERSION
+    })
+
+
+@app.route("/capabilities", methods=["GET"])
+def capabilities():
+    return jsonify({
+        "service": "reels-video-editor",
+        "version": SERVICE_VERSION,
+        "analyze_endpoint": "/analyze",
+        "extract_audio_endpoint": "/extract-audio",
+        "edit_endpoint": "/edit",
+        "content_type": "multipart/form-data",
+        "video_field": "video",
+        "actions_field": "actions",
+        "supported_actions": sorted(
+            SUPPORTED_ACTIONS
+        ),
+        "max_upload_mb": MAX_UPLOAD_MB,
+        "api_key_required": bool(
+            os.environ.get(
+                "VIDEO_EDITOR_API_KEY",
+                ""
+            ).strip()
+        )
     })
 
 
@@ -76,6 +169,349 @@ def get_video_size(path):
     stream = data["streams"][0]
 
     return int(stream["width"]), int(stream["height"])
+
+
+def get_safe_video_extension(filename):
+    extension = os.path.splitext(
+        secure_filename(filename or "")
+    )[1].lower()
+
+    if extension not in (
+        ".mp4",
+        ".mov",
+        ".m4v",
+        ".webm"
+    ):
+        return None
+
+    return extension
+
+
+def detect_silences(
+    path,
+    duration,
+    noise_db=-35,
+    minimum_duration=0.35
+):
+    command = [
+        "ffmpeg",
+        "-hide_banner",
+        "-i",
+        path,
+        "-af",
+        (
+            f"silencedetect=noise={noise_db}dB:"
+            f"d={minimum_duration}"
+        ),
+        "-f",
+        "null",
+        "-"
+    ]
+
+    process = subprocess.run(
+        command,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+
+    log = process.stderr.decode(
+        errors="ignore"
+    )
+
+    starts = [
+        float(value)
+        for value in re.findall(
+            r"silence_start:\s*([0-9.]+)",
+            log
+        )
+    ]
+
+    ends = [
+        float(value)
+        for value in re.findall(
+            r"silence_end:\s*([0-9.]+)",
+            log
+        )
+    ]
+
+    silences = []
+
+    for index, start in enumerate(starts):
+        end = (
+            ends[index]
+            if index < len(ends)
+            else duration
+        )
+
+        start = max(
+            0.0,
+            min(start, duration)
+        )
+
+        end = max(
+            start,
+            min(end, duration)
+        )
+
+        if end > start:
+            silences.append({
+                "start": round(start, 3),
+                "end": round(end, 3),
+                "duration": round(
+                    end - start,
+                    3
+                )
+            })
+
+    return silences
+
+
+def build_suggested_cuts(
+    silences,
+    duration
+):
+    suggestions = []
+
+    for silence in silences:
+        start = float(silence["start"])
+        end = float(silence["end"])
+        silence_duration = end - start
+
+        if start <= 0.15 and end > 0.25:
+            cut_start = 0.0
+            cut_end = max(
+                0.0,
+                end - 0.12
+            )
+        elif end >= duration - 0.15 and silence_duration > 0.25:
+            cut_start = min(
+                duration,
+                start + 0.12
+            )
+            cut_end = duration
+        elif silence_duration >= 0.65:
+            cut_start = start + 0.18
+            cut_end = end - 0.18
+        else:
+            continue
+
+        if cut_end > cut_start:
+            suggestions.append({
+                "action": "CUT",
+                "start": round(
+                    cut_start,
+                    3
+                ),
+                "end": round(
+                    cut_end,
+                    3
+                ),
+                "reason": "detected_silence"
+            })
+
+    return suggestions
+
+
+def build_speech_segments(
+    silences,
+    duration
+):
+    segments = []
+    current = 0.0
+
+    for silence in silences:
+        start = float(silence["start"])
+        end = float(silence["end"])
+
+        if start - current >= 0.15:
+            segments.append({
+                "start": round(current, 3),
+                "end": round(start, 3)
+            })
+
+        current = max(current, end)
+
+    if duration - current >= 0.15:
+        segments.append({
+            "start": round(current, 3),
+            "end": round(duration, 3)
+        })
+
+    return segments
+
+
+@app.route("/analyze", methods=["POST"])
+def analyze_video():
+    auth_error = check_api_key()
+
+    if auth_error:
+        return auth_error
+
+    if "video" not in request.files:
+        return jsonify({
+            "error": "Video file is required"
+        }), 400
+
+    video = request.files["video"]
+    extension = get_safe_video_extension(
+        video.filename
+    )
+
+    if not extension:
+        return jsonify({
+            "error": "Unsupported video format",
+            "supported_extensions": [
+                ".mp4",
+                ".mov",
+                ".m4v",
+                ".webm"
+            ]
+        }), 400
+
+    job_id = str(uuid.uuid4())
+    input_path = os.path.join(
+        WORK_DIR,
+        f"{job_id}_analyze{extension}"
+    )
+
+    try:
+        video.save(input_path)
+        duration = get_duration(input_path)
+        width, height = get_video_size(
+            input_path
+        )
+        silences = detect_silences(
+            input_path,
+            duration
+        )
+
+        return jsonify({
+            "job_id": job_id,
+            "duration": round(duration, 3),
+            "width": width,
+            "height": height,
+            "aspect_ratio": round(
+                width / height,
+                4
+            ) if height else None,
+            "silences": silences,
+            "speech_segments": build_speech_segments(
+                silences,
+                duration
+            ),
+            "suggested_cuts": build_suggested_cuts(
+                silences,
+                duration
+            )
+        })
+
+    except subprocess.CalledProcessError as error:
+        details = (
+            error.stderr.decode(errors="ignore")
+            if error.stderr
+            else str(error)
+        )
+
+        return jsonify({
+            "error": "Video analysis failed",
+            "details": details[-3000:]
+        }), 500
+
+    except Exception as error:
+        return jsonify({
+            "error": "Video analysis failed",
+            "details": str(error)
+        }), 500
+
+    finally:
+        remove_file(input_path)
+
+
+@app.route("/extract-audio", methods=["POST"])
+def extract_audio():
+    auth_error = check_api_key()
+
+    if auth_error:
+        return auth_error
+
+    if "video" not in request.files:
+        return jsonify({
+            "error": "Video file is required"
+        }), 400
+
+    video = request.files["video"]
+    extension = get_safe_video_extension(
+        video.filename
+    )
+
+    if not extension:
+        return jsonify({
+            "error": "Unsupported video format"
+        }), 400
+
+    job_id = str(uuid.uuid4())
+    input_path = os.path.join(
+        WORK_DIR,
+        f"{job_id}_audio_input{extension}"
+    )
+    output_path = os.path.join(
+        WORK_DIR,
+        f"{job_id}_audio.mp3"
+    )
+
+    try:
+        video.save(input_path)
+        run_ffmpeg([
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            "-vn",
+            "-ac",
+            "1",
+            "-ar",
+            "16000",
+            "-b:a",
+            "64k",
+            output_path
+        ])
+
+        response = send_file(
+            output_path,
+            mimetype="audio/mpeg",
+            as_attachment=True,
+            download_name="speech.mp3"
+        )
+        response.headers[
+            "X-Reels-Editor-Job-Id"
+        ] = job_id
+        response.call_on_close(
+            lambda: remove_file(output_path)
+        )
+        return response
+
+    except subprocess.CalledProcessError as error:
+        remove_file(output_path)
+        details = (
+            error.stderr.decode(errors="ignore")
+            if error.stderr
+            else str(error)
+        )
+        return jsonify({
+            "error": "Audio extraction failed",
+            "details": details[-3000:]
+        }), 500
+
+    except Exception as error:
+        remove_file(output_path)
+        return jsonify({
+            "error": "Audio extraction failed",
+            "details": str(error)
+        }), 500
+
+    finally:
+        remove_file(input_path)
 
 
 # =========================================================
@@ -334,6 +770,11 @@ Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
 @app.route("/edit", methods=["POST"])
 def edit_video():
 
+    auth_error = check_api_key()
+
+    if auth_error:
+        return auth_error
+
     if "video" not in request.files:
 
         return jsonify({
@@ -345,6 +786,14 @@ def edit_video():
     video = request.files[
         "video"
     ]
+
+
+    if not video.filename:
+
+        return jsonify({
+            "error":
+            "Video filename is required"
+        }), 400
 
 
     actions_raw = request.form.get(
@@ -367,6 +816,30 @@ def edit_video():
                 "actions must be list"
             )
 
+        if len(actions) > 500:
+            raise ValueError(
+                "actions limit is 500"
+            )
+
+        for index, action in enumerate(actions):
+            if not isinstance(action, dict):
+                raise ValueError(
+                    f"actions[{index}] must be object"
+                )
+
+            action_type = str(
+                action.get(
+                    "action",
+                    ""
+                )
+            ).upper().strip()
+
+            if action_type not in SUPPORTED_ACTIONS:
+                raise ValueError(
+                    f"Unsupported action at index {index}: "
+                    f"{action_type or 'empty'}"
+                )
+
     except Exception as e:
 
         return jsonify({
@@ -383,9 +856,26 @@ def edit_video():
     )
 
 
+    safe_extension = get_safe_video_extension(
+        video.filename
+    )
+
+    if not safe_extension:
+
+        return jsonify({
+            "error": "Unsupported video format",
+            "supported_extensions": [
+                ".mp4",
+                ".mov",
+                ".m4v",
+                ".webm"
+            ]
+        }), 400
+
+
     input_path = os.path.join(
         WORK_DIR,
-        f"{job_id}_input.mp4"
+        f"{job_id}_input{safe_extension}"
     )
 
     cut_path = os.path.join(
@@ -1063,7 +1553,22 @@ def edit_video():
         # RETURN
         # =================================================
 
-        return send_file(
+        output_name = secure_filename(
+            request.form.get(
+                "output_name",
+                "edited_reel.mp4"
+            )
+        )
+
+        if not output_name:
+            output_name = "edited_reel.mp4"
+
+        elif not output_name.lower().endswith(
+            ".mp4"
+        ):
+            output_name += ".mp4"
+
+        response = send_file(
             output_path,
 
             mimetype=
@@ -1073,11 +1578,25 @@ def edit_video():
                 True,
 
             download_name=
-                "edited_reel.mp4"
+                output_name
         )
+
+        response.headers[
+            "X-Reels-Editor-Job-Id"
+        ] = job_id
+
+        response.call_on_close(
+            lambda: remove_file(
+                output_path
+            )
+        )
+
+        return response
 
 
     except subprocess.CalledProcessError as e:
+
+        remove_file(output_path)
 
         error_text = (
 
@@ -1110,6 +1629,8 @@ def edit_video():
 
     except Exception as e:
 
+        remove_file(output_path)
+
         print(
             "SERVER ERROR:",
             str(e)
@@ -1133,20 +1654,7 @@ def edit_video():
 
 
         for path in cleanup_paths:
-
-            if os.path.exists(
-                path
-            ):
-
-                try:
-
-                    os.remove(
-                        path
-                    )
-
-                except Exception:
-
-                    pass
+            remove_file(path)
 
 
 if __name__ == "__main__":
