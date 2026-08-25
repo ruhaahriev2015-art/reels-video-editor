@@ -25,7 +25,13 @@ app.config["MAX_CONTENT_LENGTH"] = (
 WORK_DIR = "/tmp/reels_editor"
 os.makedirs(WORK_DIR, exist_ok=True)
 
-SERVICE_VERSION = "2.0.1"
+SERVICE_VERSION = "2.0.2"
+OUTPUT_MAX_WIDTH = int(
+    os.environ.get("OUTPUT_MAX_WIDTH", "720")
+)
+OUTPUT_MAX_HEIGHT = int(
+    os.environ.get("OUTPUT_MAX_HEIGHT", "1280")
+)
 SUPPORTED_ACTIONS = {
     "CUT",
     "TEXT",
@@ -115,6 +121,8 @@ def capabilities():
             SUPPORTED_ACTIONS
         ),
         "max_upload_mb": MAX_UPLOAD_MB,
+        "output_max_width": OUTPUT_MAX_WIDTH,
+        "output_max_height": OUTPUT_MAX_HEIGHT,
         "api_key_required": bool(
             os.environ.get(
                 "VIDEO_EDITOR_API_KEY",
@@ -770,6 +778,257 @@ Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text
         )
 
 
+def fit_dimensions(
+    width,
+    height,
+    max_width=OUTPUT_MAX_WIDTH,
+    max_height=OUTPUT_MAX_HEIGHT
+):
+    """Fit a video inside the configured render box using even sizes."""
+
+    if width <= 0 or height <= 0:
+        raise ValueError("Invalid video dimensions")
+
+    scale = min(
+        1.0,
+        max_width / width,
+        max_height / height
+    )
+
+    fitted_width = max(
+        2,
+        int(width * scale) // 2 * 2
+    )
+    fitted_height = max(
+        2,
+        int(height * scale) // 2 * 2
+    )
+
+    return fitted_width, fitted_height
+
+
+def build_zoom_filters(
+    zooms,
+    width,
+    height
+):
+    """Render every timed zoom with one scale/crop pair."""
+
+    if not zooms:
+        return []
+
+    factor = "1"
+
+    for item in reversed(zooms):
+        factor = (
+            f"if(between(t,{item['start']},{item['end']}),"
+            f"{item['scale']},{factor})"
+        )
+
+    return [
+        (
+            "scale="
+            f"w='trunc({width}*({factor})/2)*2':"
+            f"h='trunc({height}*({factor})/2)*2':"
+            "eval=frame"
+        ),
+        (
+            "crop="
+            f"w={width}:h={height}:"
+            "x='(iw-ow)/2':y='(ih-oh)/2'"
+        ),
+        "setsar=1"
+    ]
+
+
+def render_video_single_pass(
+    input_path,
+    output_path,
+    ass_path,
+    cuts,
+    text_actions,
+    zoom_actions
+):
+    """Apply cuts, zooms and subtitles in one FFmpeg encode."""
+
+    duration = get_duration(input_path)
+    source_width, source_height = get_video_size(
+        input_path
+    )
+    output_width, output_height = fit_dimensions(
+        source_width,
+        source_height
+    )
+
+    bounded_cuts = []
+
+    for start, end in cuts:
+        start = max(0.0, min(float(start), duration))
+        end = max(0.0, min(float(end), duration))
+
+        if end > start:
+            bounded_cuts.append((start, end))
+
+    bounded_cuts = merge_cuts(bounded_cuts)
+    keep_segments = []
+    current = 0.0
+
+    for start, end in bounded_cuts:
+        if start > current:
+            keep_segments.append((current, start))
+        current = max(current, end)
+
+    if current < duration:
+        keep_segments.append((current, duration))
+
+    if not keep_segments:
+        raise ValueError(
+            "CUT actions remove the entire video"
+        )
+
+    final_duration = sum(
+        end - start
+        for start, end in keep_segments
+    )
+
+    mapped_zooms = []
+
+    for item in zoom_actions:
+        start = map_time_after_cuts(
+            item["start"],
+            bounded_cuts
+        )
+        end = map_time_after_cuts(
+            item["end"],
+            bounded_cuts
+        )
+        start = max(0.0, min(start, final_duration))
+        end = max(0.0, min(end, final_duration))
+
+        if end > start:
+            mapped_zooms.append({
+                "start": round(start, 3),
+                "end": round(end, 3),
+                "scale": item["scale"]
+            })
+
+    mapped_texts = []
+
+    for item in text_actions:
+        start = map_time_after_cuts(
+            item["start"],
+            bounded_cuts
+        )
+        end = map_time_after_cuts(
+            item["end"],
+            bounded_cuts
+        )
+        start = max(0.0, min(start, final_duration))
+        end = max(0.0, min(end, final_duration))
+
+        if end > start:
+            mapped_texts.append({
+                "start": start,
+                "end": end,
+                "text": item["text"],
+                "highlight": item.get("highlight", "")
+            })
+
+    if mapped_texts:
+        create_ass_file(
+            ass_path,
+            output_width,
+            output_height,
+            mapped_texts
+        )
+
+    filters = []
+
+    if bounded_cuts:
+        concat_inputs = []
+
+        for index, (start, end) in enumerate(
+            keep_segments
+        ):
+            filters.append(
+                f"[0:v]trim=start={start}:end={end},"
+                f"setpts=PTS-STARTPTS[v{index}]"
+            )
+            filters.append(
+                f"[0:a]atrim=start={start}:end={end},"
+                f"asetpts=PTS-STARTPTS[a{index}]"
+            )
+            concat_inputs.append(
+                f"[v{index}][a{index}]"
+            )
+
+        filters.append(
+            "".join(concat_inputs)
+            + f"concat=n={len(keep_segments)}:v=1:a=1"
+            + "[basev][outa]"
+        )
+    else:
+        filters.extend([
+            "[0:v]null[basev]",
+            "[0:a]anull[outa]"
+        ])
+
+    video_filters = [
+        (
+            f"scale={output_width}:{output_height}:"
+            "flags=fast_bilinear"
+        )
+    ]
+    video_filters.extend(
+        build_zoom_filters(
+            mapped_zooms,
+            output_width,
+            output_height
+        )
+    )
+
+    if mapped_texts:
+        video_filters.append(
+            f"subtitles={ass_path}"
+        )
+
+    filters.append(
+        "[basev]"
+        + ",".join(video_filters)
+        + "[outv]"
+    )
+
+    run_ffmpeg([
+        "ffmpeg",
+        "-y",
+        "-i",
+        input_path,
+        "-filter_complex",
+        ";".join(filters),
+        "-map",
+        "[outv]",
+        "-map",
+        "[outa]",
+        "-c:v",
+        "libx264",
+        "-preset",
+        "ultrafast",
+        "-crf",
+        "28",
+        "-pix_fmt",
+        "yuv420p",
+        "-threads",
+        "0",
+        "-c:a",
+        "aac",
+        "-b:a",
+        "96k",
+        "-movflags",
+        "+faststart",
+        output_path
+    ])
+
+
 # =========================================================
 # EDIT
 # =========================================================
@@ -1075,6 +1334,44 @@ def edit_video():
         cuts = merge_cuts(
             cuts
         )
+
+        # Render the complete edit in one encode. The former three-pass
+        # pipeline (cut -> zoom -> subtitles) exceeded Render's upstream
+        # request window for longer videos.
+        render_video_single_pass(
+            input_path,
+            output_path,
+            ass_path,
+            cuts,
+            text_actions,
+            zoom_actions
+        )
+
+        output_name = secure_filename(
+            request.form.get(
+                "output_name",
+                "edited_reel.mp4"
+            )
+        )
+
+        if not output_name:
+            output_name = "edited_reel.mp4"
+        elif not output_name.lower().endswith(".mp4"):
+            output_name += ".mp4"
+
+        response = send_file(
+            output_path,
+            mimetype="video/mp4",
+            as_attachment=True,
+            download_name=output_name
+        )
+        response.headers[
+            "X-Reels-Editor-Job-Id"
+        ] = job_id
+        response.call_on_close(
+            lambda: remove_file(output_path)
+        )
+        return response
 
 
         # =================================================
