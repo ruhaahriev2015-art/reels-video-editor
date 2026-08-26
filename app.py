@@ -4,6 +4,8 @@ import json
 import uuid
 import subprocess
 import hmac
+import threading
+import time
 
 from flask import Flask, request, jsonify, send_file
 from werkzeug.exceptions import RequestEntityTooLarge
@@ -25,7 +27,7 @@ app.config["MAX_CONTENT_LENGTH"] = (
 WORK_DIR = "/tmp/reels_editor"
 os.makedirs(WORK_DIR, exist_ok=True)
 
-SERVICE_VERSION = "2.0.2"
+SERVICE_VERSION = "2.1.0"
 OUTPUT_MAX_WIDTH = int(
     os.environ.get("OUTPUT_MAX_WIDTH", "720")
 )
@@ -38,6 +40,19 @@ SUPPORTED_ACTIONS = {
     "SUBTITLE",
     "ZOOM"
 }
+
+EDIT_JOB_TTL_SECONDS = int(
+    os.environ.get("EDIT_JOB_TTL_SECONDS", "7200")
+)
+MAX_BACKGROUND_EDITS = max(
+    1,
+    int(os.environ.get("MAX_BACKGROUND_EDITS", "1"))
+)
+EDIT_JOBS = {}
+EDIT_JOBS_LOCK = threading.Lock()
+EDIT_JOB_SLOTS = threading.BoundedSemaphore(
+    MAX_BACKGROUND_EDITS
+)
 
 
 def remove_file(path):
@@ -114,6 +129,10 @@ def capabilities():
         "analyze_endpoint": "/analyze",
         "extract_audio_endpoint": "/extract-audio",
         "edit_endpoint": "/edit",
+        "edit_start_endpoint": "/edit/start",
+        "edit_status_endpoint": "/edit/status/<job_id>",
+        "edit_result_endpoint": "/edit/result/<job_id>",
+        "async_edit_supported": True,
         "content_type": "multipart/form-data",
         "video_field": "video",
         "actions_field": "actions",
@@ -1027,6 +1046,389 @@ def render_video_single_pass(
         "+faststart",
         output_path
     ])
+
+
+def validate_edit_actions(actions_raw):
+    actions = json.loads(actions_raw)
+
+    if not isinstance(actions, list):
+        raise ValueError("actions must be list")
+
+    if len(actions) > 500:
+        raise ValueError("actions limit is 500")
+
+    for index, action in enumerate(actions):
+        if not isinstance(action, dict):
+            raise ValueError(
+                f"actions[{index}] must be object"
+            )
+
+        action_type = str(
+            action.get("action", "")
+        ).upper().strip()
+
+        if action_type not in SUPPORTED_ACTIONS:
+            raise ValueError(
+                f"Unsupported action at index {index}: "
+                f"{action_type or 'empty'}"
+            )
+
+    return actions
+
+
+def split_edit_actions(actions):
+    cuts = []
+    text_actions = []
+    zoom_actions = []
+
+    for action in actions:
+        action_type = str(
+            action.get("action", "")
+        ).upper().strip()
+
+        if action_type == "CUT":
+            start = float(action.get("start", 0))
+            end = float(action.get("end", 0))
+
+            if end > start:
+                cuts.append((start, end))
+
+        elif action_type in ("TEXT", "SUBTITLE"):
+            start = float(action.get("start", 0))
+            end = float(
+                action.get("end", start + 2)
+            )
+            text = str(
+                action.get("text", "")
+            ).strip()
+            highlight = str(
+                action.get("highlight", "")
+            ).strip()
+
+            if text and end > start:
+                text_actions.append({
+                    "start": start,
+                    "end": end,
+                    "text": text,
+                    "highlight": highlight
+                })
+
+        elif action_type == "ZOOM":
+            start = float(action.get("start", 0))
+            end = float(
+                action.get("end", start + 1)
+            )
+            scale = float(
+                action.get("scale", 1.12)
+            )
+            scale = max(1.01, min(scale, 1.35))
+
+            if end > start:
+                zoom_actions.append({
+                    "start": start,
+                    "end": end,
+                    "scale": scale
+                })
+
+    return (
+        merge_cuts(cuts),
+        text_actions,
+        zoom_actions
+    )
+
+
+def update_edit_job(job_id, **changes):
+    with EDIT_JOBS_LOCK:
+        job = EDIT_JOBS.get(job_id)
+
+        if not job:
+            return
+
+        job.update(changes)
+        job["updated_at"] = time.time()
+
+
+def get_edit_job(job_id):
+    with EDIT_JOBS_LOCK:
+        job = EDIT_JOBS.get(job_id)
+        return dict(job) if job else None
+
+
+def remove_edit_job(job_id):
+    with EDIT_JOBS_LOCK:
+        job = EDIT_JOBS.pop(job_id, None)
+
+    if not job:
+        return
+
+    for key in ("input_path", "output_path", "ass_path"):
+        remove_file(job.get(key))
+
+
+def cleanup_expired_edit_jobs():
+    cutoff = time.time() - EDIT_JOB_TTL_SECONDS
+
+    with EDIT_JOBS_LOCK:
+        expired_ids = [
+            job_id
+            for job_id, job in EDIT_JOBS.items()
+            if job.get("updated_at", 0) < cutoff
+        ]
+
+    for job_id in expired_ids:
+        remove_edit_job(job_id)
+
+
+def public_edit_job(job):
+    status = job["status"]
+    data = {
+        "job_id": job["job_id"],
+        "status": status,
+        "ready": status == "completed",
+        "status_url": (
+            f"/edit/status/{job['job_id']}"
+        ),
+        "result_url": (
+            f"/edit/result/{job['job_id']}"
+        )
+    }
+
+    if status == "failed":
+        data["error"] = job.get(
+            "error",
+            "Video processing failed"
+        )
+
+    return data
+
+
+def process_edit_job(job_id, actions):
+    job = get_edit_job(job_id)
+
+    if not job:
+        return
+
+    with EDIT_JOB_SLOTS:
+        update_edit_job(job_id, status="processing")
+
+        try:
+            cuts, text_actions, zoom_actions = (
+                split_edit_actions(actions)
+            )
+
+            render_video_single_pass(
+                job["input_path"],
+                job["output_path"],
+                job["ass_path"],
+                cuts,
+                text_actions,
+                zoom_actions
+            )
+
+            update_edit_job(
+                job_id,
+                status="completed"
+            )
+
+        except subprocess.CalledProcessError as error:
+            error_text = ""
+
+            if error.stderr:
+                error_text = error.stderr.decode(
+                    errors="replace"
+                )
+
+            remove_file(job["output_path"])
+            update_edit_job(
+                job_id,
+                status="failed",
+                error=(
+                    "FFmpeg processing failed: "
+                    + error_text[-6000:]
+                )
+            )
+
+        except Exception as error:
+            remove_file(job["output_path"])
+            update_edit_job(
+                job_id,
+                status="failed",
+                error=str(error)
+            )
+
+        finally:
+            remove_file(job["input_path"])
+            remove_file(job["ass_path"])
+
+
+@app.route("/edit/start", methods=["POST"])
+def start_edit_job():
+    auth_error = check_api_key()
+
+    if auth_error:
+        return auth_error
+
+    cleanup_expired_edit_jobs()
+
+    if "video" not in request.files:
+        return jsonify({
+            "error": "Video file is required"
+        }), 400
+
+    video = request.files["video"]
+
+    if not video.filename:
+        return jsonify({
+            "error": "Video filename is required"
+        }), 400
+
+    try:
+        actions = validate_edit_actions(
+            request.form.get("actions", "[]")
+        )
+    except Exception as error:
+        return jsonify({
+            "error": "Invalid actions JSON",
+            "details": str(error)
+        }), 400
+
+    safe_extension = get_safe_video_extension(
+        video.filename
+    )
+
+    if not safe_extension:
+        return jsonify({
+            "error": "Unsupported video format",
+            "supported_extensions": [
+                ".mp4", ".mov", ".m4v", ".webm"
+            ]
+        }), 400
+
+    job_id = str(uuid.uuid4())
+    output_name = secure_filename(
+        request.form.get(
+            "output_name",
+            "edited_reel.mp4"
+        )
+    )
+
+    if not output_name:
+        output_name = "edited_reel.mp4"
+    elif not output_name.lower().endswith(".mp4"):
+        output_name += ".mp4"
+
+    now = time.time()
+    input_path = os.path.join(
+        WORK_DIR,
+        f"{job_id}_input{safe_extension}"
+    )
+    output_path = os.path.join(
+        WORK_DIR,
+        f"{job_id}_output.mp4"
+    )
+    ass_path = os.path.join(
+        WORK_DIR,
+        f"{job_id}_subtitles.ass"
+    )
+
+    try:
+        video.save(input_path)
+
+        with EDIT_JOBS_LOCK:
+            EDIT_JOBS[job_id] = {
+                "job_id": job_id,
+                "status": "queued",
+                "created_at": now,
+                "updated_at": now,
+                "input_path": input_path,
+                "output_path": output_path,
+                "ass_path": ass_path,
+                "output_name": output_name
+            }
+
+        worker = threading.Thread(
+            target=process_edit_job,
+            args=(job_id, actions),
+            daemon=True
+        )
+        worker.start()
+
+    except Exception as error:
+        remove_edit_job(job_id)
+        remove_file(input_path)
+        return jsonify({
+            "error": str(error)
+        }), 500
+
+    return jsonify(
+        public_edit_job(get_edit_job(job_id))
+    ), 202
+
+
+@app.route(
+    "/edit/status/<job_id>",
+    methods=["GET"]
+)
+def edit_job_status(job_id):
+    auth_error = check_api_key()
+
+    if auth_error:
+        return auth_error
+
+    cleanup_expired_edit_jobs()
+    job = get_edit_job(job_id)
+
+    if not job:
+        return jsonify({
+            "error": "Edit job not found"
+        }), 404
+
+    return jsonify(public_edit_job(job))
+
+
+@app.route(
+    "/edit/result/<job_id>",
+    methods=["GET"]
+)
+def edit_job_result(job_id):
+    auth_error = check_api_key()
+
+    if auth_error:
+        return auth_error
+
+    cleanup_expired_edit_jobs()
+    job = get_edit_job(job_id)
+
+    if not job:
+        return jsonify({
+            "error": "Edit job not found"
+        }), 404
+
+    if job["status"] in ("queued", "processing"):
+        return jsonify(public_edit_job(job)), 202
+
+    if job["status"] == "failed":
+        return jsonify(public_edit_job(job)), 500
+
+    if not os.path.exists(job["output_path"]):
+        remove_edit_job(job_id)
+        return jsonify({
+            "error": "Edited video file is unavailable"
+        }), 410
+
+    response = send_file(
+        job["output_path"],
+        mimetype="video/mp4",
+        as_attachment=True,
+        download_name=job["output_name"]
+    )
+    response.headers["X-Reels-Editor-Job-Id"] = (
+        job_id
+    )
+    response.call_on_close(
+        lambda: remove_edit_job(job_id)
+    )
+    return response
 
 
 # =========================================================
